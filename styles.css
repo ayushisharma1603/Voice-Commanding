@@ -1,4 +1,4 @@
-/* Custom Styling for Voice Command Shopping Assistant */
+/* Custom Styling for Voice Command Shopping Assistant (VoiceCart AI) */
 
 @keyframes pulse-mic {
     0% {
@@ -39,7 +39,7 @@
 .audio-bar:nth-child(4) { animation: wave-bar 1.2s infinite ease-in-out 0.4s; }
 .audio-bar:nth-child(5) { animation: wave-bar 1.2s infinite ease-in-out 0.15s; }
 
-/* Custom Category Colors */
+/* Custom Category Badge Colors */
 .badge-produce { background-color: #dcfce7; color: #166534; }
 .badge-dairy { background-color: #e0f2fe; color: #075985; }
 .badge-bakery { background-color: #fef3c7; color: #92400e; }
@@ -50,9 +50,19 @@
 .badge-household { background-color: #f1f5f9; color: #334155; }
 .badge-personal { background-color: #fce7f3; color: #9d174d; }
 
+.dark .badge-produce { background-color: rgba(22, 101, 52, 0.3); color: #86efac; }
+.dark .badge-dairy { background-color: rgba(7, 89, 133, 0.3); color: #7dd3fc; }
+.dark .badge-bakery { background-color: rgba(146, 64, 14, 0.3); color: #fde047; }
+.dark .badge-meat { background-color: rgba(159, 18, 57, 0.3); color: #fca5a5; }
+.dark .badge-pantry { background-color: rgba(107, 33, 168, 0.3); color: #d8b4fe; }
+.dark .badge-beverages { background-color: rgba(17, 94, 89, 0.3); color: #5eead4; }
+.dark .badge-snacks { background-color: rgba(154, 52, 18, 0.3); color: #fdba74; }
+.dark .badge-household { background-color: rgba(51, 65, 85, 0.3); color: #cbd5e1; }
+.dark .badge-personal { background-color: rgba(157, 23, 77, 0.3); color: #f472b6; }
+
 /* Completed item strikethrough styling */
 .item-completed {
-    opacity: 0.55;
+    opacity: 0.5;
 }
 .item-completed .item-title {
     text-decoration: line-through;
@@ -60,15 +70,15 @@
 
 /* Glassmorphism effects */
 .glass-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(229, 231, 235, 0.7);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(229, 231, 235, 0.8);
 }
 
 .dark .glass-card {
-    background: rgba(17, 24, 39, 0.85);
-    border: 1px solid rgba(55, 65, 81, 0.7);
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(51, 65, 85, 0.7);
 }
 
 /* Voice-Only Mode HUD Overlay */
@@ -85,7 +95,16 @@
     padding: 2rem;
 }
 
+/* Custom Scrollbars */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* Smooth Transitions */
 * {
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }

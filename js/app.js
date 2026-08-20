@@ -1,12 +1,13 @@
 /**
  * App Controller - Main application orchestration module
- * Connects VoiceManager, NLPParser, SuggestionsEngine, and StorageManager with DOM UI.
+ * Connects VoiceManager, NLPParser, SuggestionsEngine, SoundFX, and StorageManager with DOM UI.
  */
 
 import { StorageManager } from './storage.js';
 import { SuggestionsEngine } from './suggestions.js';
-import { NLPParser } from './nlp.js';
+import { NLPParser, RECIPE_BUNDLES } from './nlp.js';
 import { VoiceManager } from './voice.js';
+import { SoundFX } from './sound.js';
 
 class App {
     constructor() {
@@ -14,6 +15,7 @@ class App {
         this.activeCategory = 'ALL';
         this.searchQuery = '';
         this.maxPriceFilter = null;
+        this.soundEnabled = true;
         this.voiceManager = null;
 
         this.initDOM();
@@ -44,6 +46,18 @@ class App {
         this.hudMicBtn = document.getElementById('hudMicBtn');
         this.hudTranscriptBox = document.getElementById('hudTranscriptBox');
         this.hudLangText = document.getElementById('hudLangText');
+
+        // Export Menu
+        this.exportDropdownBtn = document.getElementById('exportDropdownBtn');
+        this.exportMenu = document.getElementById('exportMenu');
+        this.copyListBtn = document.getElementById('copyListBtn');
+        this.downloadCsvBtn = document.getElementById('downloadCsvBtn');
+
+        // Dashboard Stats
+        this.dashTotalItems = document.getElementById('dashTotalItems');
+        this.dashCompletedPercent = document.getElementById('dashCompletedPercent');
+        this.dashProgressBar = document.getElementById('dashProgressBar');
+        this.dashEstTotal = document.getElementById('dashEstTotal');
 
         this.suggestionsContainer = document.getElementById('suggestionsContainer');
         this.seasonBadge = document.getElementById('seasonBadge');
@@ -78,6 +92,7 @@ class App {
         this.closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
         this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
         this.voiceFeedbackToggle = document.getElementById('voiceFeedbackToggle');
+        this.soundFxToggle = document.getElementById('soundFxToggle');
         this.voiceSpeedRange = document.getElementById('voiceSpeedRange');
         this.speedValueText = document.getElementById('speedValueText');
         this.geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
@@ -93,7 +108,6 @@ class App {
             (stateInfo) => this.handleVoiceStateChange(stateInfo)
         );
 
-        // Load saved theme & settings
         const settings = StorageManager.getSettings();
         if (settings.theme === 'dark') {
             document.documentElement.classList.add('dark');
@@ -110,8 +124,12 @@ class App {
      */
     initEventListeners() {
         // Mic Button Click
-        this.micBtn.addEventListener('click', () => this.voiceManager.startListening());
-        this.hudMicBtn.addEventListener('click', () => this.voiceManager.startListening());
+        const triggerMic = () => {
+            if (this.soundEnabled) SoundFX.playMicStart();
+            this.voiceManager.startListening();
+        };
+        this.micBtn.addEventListener('click', triggerMic);
+        this.hudMicBtn.addEventListener('click', triggerMic);
 
         // Language Select
         this.languageSelect.addEventListener('change', (e) => {
@@ -122,6 +140,27 @@ class App {
             StorageManager.saveSettings(settings);
             this.updateHudLangText(lang);
             this.showToast(`Language set to ${e.target.options[e.target.selectedIndex].text}`);
+        });
+
+        // Export Dropdown
+        this.exportDropdownBtn.addEventListener('click', () => {
+            this.exportMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!this.exportDropdownBtn.contains(e.target) && !this.exportMenu.contains(e.target)) {
+                this.exportMenu.classList.add('hidden');
+            }
+        });
+
+        this.copyListBtn.addEventListener('click', () => {
+            this.exportAsText();
+            this.exportMenu.classList.add('hidden');
+        });
+
+        this.downloadCsvBtn.addEventListener('click', () => {
+            this.exportAsCSV();
+            this.exportMenu.classList.add('hidden');
         });
 
         // Search Input & Reset
@@ -166,11 +205,27 @@ class App {
             });
         });
 
+        // Recipe Bundle Buttons
+        document.querySelectorAll('.recipe-bundle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const recipeKey = btn.getAttribute('data-recipe');
+                const items = RECIPE_BUNDLES[recipeKey];
+                if (items) {
+                    items.forEach(item => this.addItem(item, false));
+                    if (this.soundEnabled) SoundFX.playItemAdd();
+                    const recipeName = recipeKey.charAt(0).toUpperCase() + recipeKey.slice(1);
+                    this.showToast(`Added ${recipeName} recipe ingredients to list!`);
+                    this.voiceManager.speak(`Added ingredients for ${recipeName} to your list.`);
+                }
+            });
+        });
+
         // Clear buttons
         this.clearCompletedBtn.addEventListener('click', () => {
             this.items = this.items.filter(i => !i.completed);
             StorageManager.saveItems(this.items);
             this.render();
+            if (this.soundEnabled) SoundFX.playDelete();
             this.showToast('Cleared completed items');
         });
 
@@ -179,6 +234,7 @@ class App {
                 this.items = [];
                 StorageManager.saveItems(this.items);
                 this.render();
+                if (this.soundEnabled) SoundFX.playDelete();
                 this.showToast('Shopping list cleared');
             }
         });
@@ -219,6 +275,7 @@ class App {
                 this.addItem({ name, quantity, unit, category, price, brand });
                 this.manualAddForm.reset();
                 this.addItemModal.classList.add('hidden');
+                if (this.soundEnabled) SoundFX.playItemAdd();
                 this.showToast(`Added ${name} to list`);
                 this.voiceManager.speak(`Added ${quantity} ${unit} of ${name} to your shopping list.`);
             }
@@ -228,6 +285,7 @@ class App {
         this.openSettingsBtn.addEventListener('click', () => {
             const settings = StorageManager.getSettings();
             this.voiceFeedbackToggle.checked = settings.voiceFeedback;
+            this.soundFxToggle.checked = this.soundEnabled;
             this.voiceSpeedRange.value = settings.voiceSpeed || 1.0;
             this.speedValueText.textContent = `${settings.voiceSpeed || 1.0}x`;
             this.geminiApiKeyInput.value = settings.geminiApiKey || '';
@@ -243,6 +301,7 @@ class App {
         this.saveSettingsBtn.addEventListener('click', () => {
             const settings = StorageManager.getSettings();
             settings.voiceFeedback = this.voiceFeedbackToggle.checked;
+            this.soundEnabled = this.soundFxToggle.checked;
             settings.voiceSpeed = parseFloat(this.voiceSpeedRange.value);
             settings.geminiApiKey = this.geminiApiKeyInput.value.trim();
             StorageManager.saveSettings(settings);
@@ -282,7 +341,6 @@ class App {
         
         try {
             const action = await NLPParser.parse(utteranceText);
-            console.log('Parsed NLP Action:', action);
 
             if (!action || action.intent === 'UNKNOWN') {
                 this.voiceManager.speak("I didn't quite catch that. Try saying add milk or find items under 5 dollars.");
@@ -294,7 +352,18 @@ class App {
                 case 'ADD_ITEM':
                     if (action.item && action.item.name) {
                         this.addItem(action.item);
+                        if (this.soundEnabled) SoundFX.playItemAdd();
                         const msg = `Added ${action.item.quantity} ${action.item.name} to your list.`;
+                        this.voiceManager.speak(msg);
+                        this.showToast(msg);
+                    }
+                    break;
+
+                case 'ADD_RECIPE_BUNDLE':
+                    if (action.items) {
+                        action.items.forEach(i => this.addItem(i, false));
+                        if (this.soundEnabled) SoundFX.playItemAdd();
+                        const msg = `Added ${action.recipeName} ingredients to your shopping list.`;
                         this.voiceManager.speak(msg);
                         this.showToast(msg);
                     }
@@ -304,6 +373,7 @@ class App {
                     if (action.item) {
                         const removed = this.removeItemByName(action.item);
                         if (removed) {
+                            if (this.soundEnabled) SoundFX.playDelete();
                             const msg = `Removed ${action.item} from your shopping list.`;
                             this.voiceManager.speak(msg);
                             this.showToast(msg);
@@ -319,6 +389,7 @@ class App {
                     if (action.item) {
                         const toggled = this.toggleItemByName(action.item);
                         if (toggled) {
+                            if (this.soundEnabled) SoundFX.playCheckPop();
                             const msg = `Marked ${action.item} as completed.`;
                             this.voiceManager.speak(msg);
                             this.showToast(msg);
@@ -359,8 +430,7 @@ class App {
     /**
      * Add item to list & update storage
      */
-    addItem(itemData) {
-        // Check if item already exists in list
+    addItem(itemData, updateRender = true) {
         const existingIndex = this.items.findIndex(i => i.name.toLowerCase() === itemData.name.toLowerCase());
 
         if (existingIndex !== -1) {
@@ -368,7 +438,7 @@ class App {
             if (itemData.price) this.items[existingIndex].price = itemData.price;
         } else {
             const newItem = {
-                id: Date.now().toString(),
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
                 name: itemData.name,
                 quantity: itemData.quantity || 1,
                 unit: itemData.unit || 'pcs',
@@ -383,7 +453,7 @@ class App {
 
         StorageManager.saveItems(this.items);
         StorageManager.recordPurchase(itemData.name, itemData.category);
-        this.render();
+        if (updateRender) this.render();
     }
 
     /**
@@ -415,8 +485,47 @@ class App {
     }
 
     /**
-     * Handle UI visual feedback for speech state
+     * Export Shopping List as Text
      */
+    exportAsText() {
+        if (this.items.length === 0) {
+            this.showToast('Shopping list is empty', 'warning');
+            return;
+        }
+        let text = `🛒 VoiceCart AI - Shopping List (${new Date().toLocaleDateString()})\n\n`;
+        this.items.forEach((item, idx) => {
+            const check = item.completed ? '[x]' : '[ ]';
+            const priceStr = item.price ? ` ($${item.price.toFixed(2)})` : '';
+            text += `${idx + 1}. ${check} ${item.name} - ${item.quantity} ${item.unit} [${item.category}]${priceStr}\n`;
+        });
+        navigator.clipboard.writeText(text);
+        this.showToast('Shopping list copied to clipboard!');
+    }
+
+    /**
+     * Export Shopping List as CSV
+     */
+    exportAsCSV() {
+        if (this.items.length === 0) {
+            this.showToast('Shopping list is empty', 'warning');
+            return;
+        }
+        let csv = 'Status,Name,Quantity,Unit,Category,Price,Brand\n';
+        this.items.forEach(i => {
+            const status = i.completed ? 'Completed' : 'Pending';
+            csv += `"${status}","${i.name}",${i.quantity},"${i.unit}","${i.category}",${i.price || 0},"${i.brand || ''}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Shopping_List_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('Downloaded Shopping_List.csv');
+    }
+
     handleVoiceStateChange({ state, message }) {
         this.setVoiceStatus(state, message);
     }
@@ -426,25 +535,25 @@ class App {
 
         if (state === 'listening') {
             this.micBtn.classList.add('mic-active');
-            this.voiceStatusDot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-ping';
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
             this.micSubtext.textContent = 'LISTENING...';
         } else if (state === 'speaking') {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
             this.micSubtext.textContent = 'SPEAKING';
         } else if (state === 'thinking') {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-spin';
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-spin';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
             this.micSubtext.textContent = 'PARSING...';
         } else {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
             this.micSubtext.textContent = 'TAP TO SPEAK';
@@ -474,18 +583,13 @@ class App {
         });
     }
 
-    /**
-     * Render main Shopping List items & Summary
-     */
     renderShoppingList() {
         let filtered = [...this.items];
 
-        // 1. Filter by Category Tab
         if (this.activeCategory !== 'ALL') {
             filtered = filtered.filter(i => i.category === this.activeCategory);
         }
 
-        // 2. Filter by Search Query (name or brand)
         if (this.searchQuery) {
             filtered = filtered.filter(i =>
                 i.name.toLowerCase().includes(this.searchQuery) ||
@@ -493,7 +597,6 @@ class App {
             );
         }
 
-        // 3. Filter by Max Price Cap
         if (this.maxPriceFilter !== null) {
             filtered = filtered.filter(i => i.price !== null && i.price <= this.maxPriceFilter);
         }
@@ -501,16 +604,15 @@ class App {
         this.itemCountBadge.textContent = `${filtered.length} items`;
         this.emptyListState.classList.toggle('hidden', filtered.length > 0);
 
-        // Render Cards HTML
         this.shoppingListContainer.innerHTML = filtered.map(item => this.createItemCardHTML(item)).join('');
 
-        // Attach Card Button Listeners
         this.shoppingListContainer.querySelectorAll('.item-checkbox').forEach(chk => {
             chk.addEventListener('change', (e) => {
                 const id = e.target.getAttribute('data-id');
                 const targetItem = this.items.find(i => i.id === id);
                 if (targetItem) {
                     targetItem.completed = e.target.checked;
+                    if (this.soundEnabled && targetItem.completed) SoundFX.playCheckPop();
                     StorageManager.saveItems(this.items);
                     this.render();
                 }
@@ -545,49 +647,54 @@ class App {
             btn.addEventListener('click', (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
                 this.items = this.items.filter(i => i.id !== id);
+                if (this.soundEnabled) SoundFX.playDelete();
                 StorageManager.saveItems(this.items);
                 this.render();
                 this.showToast('Item deleted');
             });
         });
 
-        // Update Summary Footer
-        const pendingCount = this.items.filter(i => !i.completed).length;
+        // Summary Calculations & Dashboard Update
+        const totalItemsCount = this.items.length;
+        const completedCount = this.items.filter(i => i.completed).length;
+        const pendingCount = totalItemsCount - completedCount;
         const totalEstPrice = this.items.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
+        const completedPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
 
-        this.summaryTotalCount.textContent = this.items.length;
+        this.dashTotalItems.textContent = `${totalItemsCount} Items`;
+        this.dashCompletedPercent.textContent = `${completedPercent}%`;
+        this.dashProgressBar.style.width = `${completedPercent}%`;
+        this.dashEstTotal.textContent = `$${totalEstPrice.toFixed(2)}`;
+
+        this.summaryTotalCount.textContent = totalItemsCount;
         this.summaryPendingCount.textContent = pendingCount;
         this.summaryTotalPrice.textContent = `$${totalEstPrice.toFixed(2)}`;
 
         if (window.lucide) lucide.createIcons();
     }
 
-    /**
-     * Create Item Card HTML template
-     */
     createItemCardHTML(item) {
         const categoryBadgeClass = this.getBadgeClass(item.category);
         const isDoneClass = item.completed ? 'item-completed' : '';
 
         return `
-            <div class="glass-card rounded-xl p-4 flex items-center justify-between gap-3 ${isDoneClass} hover:border-indigo-300 transition-all">
-                <div class="flex items-center space-x-3 min-w-0">
+            <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3 ${isDoneClass} hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-xs">
+                <div class="flex items-center space-x-3.5 min-w-0">
                     <input type="checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''} class="item-checkbox w-5 h-5 text-indigo-600 rounded cursor-pointer accent-indigo-600">
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2">
                             <span class="item-title font-semibold text-sm truncate">${item.name}</span>
-                            <span class="text-xs px-2 py-0.5 rounded-md font-medium ${categoryBadgeClass}">${item.category}</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-medium ${categoryBadgeClass}">${item.category}</span>
                         </div>
                         <div class="text-xs text-slate-400 mt-0.5 flex items-center space-x-2">
-                            ${item.brand ? `<span>Brand: ${item.brand}</span><span>•</span>` : ''}
-                            <span>Price: ${item.price ? `$${item.price.toFixed(2)}` : 'N/A'}</span>
+                            ${item.brand ? `<span class="font-medium text-slate-500">Brand: ${item.brand}</span><span>•</span>` : ''}
+                            <span class="font-medium text-slate-500">Price: ${item.price ? `$${item.price.toFixed(2)}` : 'N/A'}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quantity & Actions -->
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1">
+                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 border border-slate-200/60 dark:border-slate-700/60">
                         <button data-id="${item.id}" class="qty-minus-btn text-slate-500 hover:text-slate-900 dark:hover:text-white p-0.5">
                             <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                         </button>
@@ -604,19 +711,15 @@ class App {
         `;
     }
 
-    /**
-     * Render Smart Suggestions Section
-     */
     renderSuggestions() {
         const data = SuggestionsEngine.getAllSuggestions();
         this.seasonBadge.textContent = data.seasonName;
 
         let cardsHTML = '';
 
-        // 1. History / Low Stock Suggestions
         data.history.forEach(item => {
             cardsHTML += `
-                <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2 flex flex-col justify-between">
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-amber-700 dark:text-amber-300">📦 Low Stock Warning</span>
@@ -625,7 +728,7 @@ class App {
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
                     </div>
-                    <button data-name="${item.name}" data-category="${item.category}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium flex items-center justify-center space-x-1">
+                    <button data-name="${item.name}" data-category="${item.category}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium flex items-center justify-center space-x-1 shadow-xs">
                         <i data-lucide="plus" class="w-3 h-3"></i>
                         <span>Add to List</span>
                     </button>
@@ -633,10 +736,9 @@ class App {
             `;
         });
 
-        // 2. Seasonal Suggestions
         data.seasonal.slice(0, 2).forEach(item => {
             cardsHTML += `
-                <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-2 flex flex-col justify-between">
+                <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-2 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-700 dark:text-emerald-300">🌿 In Season (${item.season})</span>
@@ -645,7 +747,7 @@ class App {
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
                     </div>
-                    <button data-name="${item.name}" data-category="${item.category}" data-price="${item.price}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium flex items-center justify-center space-x-1">
+                    <button data-name="${item.name}" data-category="${item.category}" data-price="${item.price}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center space-x-1 shadow-xs">
                         <i data-lucide="plus" class="w-3 h-3"></i>
                         <span>Add to List</span>
                     </button>
@@ -653,10 +755,9 @@ class App {
             `;
         });
 
-        // 3. Substitutes Suggestions
         data.substitutes.forEach(item => {
             cardsHTML += `
-                <div class="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-2 flex flex-col justify-between">
+                <div class="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-2 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-purple-700 dark:text-purple-300">💡 Healthy Swap</span>
@@ -665,7 +766,7 @@ class App {
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.substitute}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
                     </div>
-                    <button data-name="${item.substitute}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center justify-center space-x-1">
+                    <button data-name="${item.substitute}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium flex items-center justify-center space-x-1 shadow-xs">
                         <i data-lucide="plus" class="w-3 h-3"></i>
                         <span>Try Substitute</span>
                     </button>
@@ -675,7 +776,6 @@ class App {
 
         this.suggestionsContainer.innerHTML = cardsHTML;
 
-        // Attach suggestion button listeners
         this.suggestionsContainer.querySelectorAll('.add-suggestion-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const name = e.currentTarget.getAttribute('data-name');
@@ -683,6 +783,7 @@ class App {
                 const price = parseFloat(e.currentTarget.getAttribute('data-price')) || null;
 
                 this.addItem({ name, quantity: 1, category, price });
+                if (this.soundEnabled) SoundFX.playItemAdd();
                 this.showToast(`Added ${name} from suggestions`);
                 this.voiceManager.speak(`Added ${name} to your list.`);
             });
@@ -691,9 +792,6 @@ class App {
         if (window.lucide) lucide.createIcons();
     }
 
-    /**
-     * Map category to Tailwind badge CSS class
-     */
     getBadgeClass(category) {
         const map = {
             'Produce': 'badge-produce',
@@ -709,9 +807,6 @@ class App {
         return map[category] || 'badge-pantry';
     }
 
-    /**
-     * Toast notification helper
-     */
     showToast(message, type = 'info') {
         const toast = document.createElement('div');
         const bg = type === 'error' ? 'bg-rose-600' : type === 'warning' ? 'bg-amber-600' : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900';
@@ -729,16 +824,12 @@ class App {
         }, 3000);
     }
 
-    /**
-     * Master render update
-     */
     render() {
         this.renderShoppingList();
         this.renderSuggestions();
     }
 }
 
-// Initialize Application on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
