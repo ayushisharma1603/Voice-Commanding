@@ -6,7 +6,7 @@
         transform: scale(1);
     }
     50% {
-        box-shadow: 0 0 0 20px rgba(79, 70, 229, 0), 0 0 0 35px rgba(147, 51, 234, 0);
+        box-shadow: 0 0 0 22px rgba(79, 70, 229, 0), 0 0 0 40px rgba(147, 51, 234, 0);
         transform: scale(1.06);
     }
     100% {
@@ -21,7 +21,7 @@
 }
 
 .mic-active {
-    animation: pulse-mic 1.5s infinite ease-in-out;
+    animation: pulse-mic 1.4s infinite ease-in-out;
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%) !important;
 }
 
@@ -70,29 +70,29 @@
 
 /* Glassmorphism effects */
 .glass-card {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(229, 231, 235, 0.8);
 }
 
 .dark .glass-card {
-    background: rgba(15, 23, 42, 0.88);
+    background: rgba(15, 23, 42, 0.92);
     border: 1px solid rgba(51, 65, 85, 0.7);
 }
 
-/* Voice-Only Mode HUD Overlay */
-.voice-hud-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    padding: 2rem;
+/* Lucide Icon Rendering Safeguard */
+svg.lucide {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+/* Header Icon Buttons */
+.header-icon-btn {
+    transition: all 0.2s ease;
+}
+.header-icon-btn:hover {
+    transform: translateY(-1px);
 }
 
 /* Custom Scrollbars */

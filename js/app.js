@@ -16,8 +16,6 @@ class App {
         this.searchQuery = '';
         this.maxPriceFilter = null;
         this.soundEnabled = true;
-        this.budgetLimit = parseFloat(localStorage.getItem('vcs_budget_limit')) || null;
-        this.voiceManager = null;
 
         this.initDOM();
         this.initVoice();
@@ -28,6 +26,7 @@ class App {
     initDOM() {
         this.micBtn = document.getElementById('micBtn');
         this.micIcon = document.getElementById('micIcon');
+        this.micRingGlow = document.getElementById('micRingGlow');
         this.voiceStatusDot = document.getElementById('voiceStatusDot');
         this.voiceStatusText = document.getElementById('voiceStatusText');
         this.audioWaveform = document.getElementById('audioWaveform');
@@ -42,27 +41,16 @@ class App {
         this.headerHelpBtn = document.getElementById('headerHelpBtn');
         this.headerRecipeBtn = document.getElementById('headerRecipeBtn');
 
-        this.voiceAudioToggleBtn = document.getElementById('voiceAudioToggleBtn');
-        this.voiceAudioStatusText = document.getElementById('voiceAudioStatusText');
-
-        this.toggleVoiceHudBtn = document.getElementById('toggleVoiceHudBtn');
-        this.voiceHudOverlay = document.getElementById('voiceHudOverlay');
-        this.exitVoiceHudBtn = document.getElementById('exitVoiceHudBtn');
-        this.hudMicBtn = document.getElementById('hudMicBtn');
-        this.hudTranscriptBox = document.getElementById('hudTranscriptBox');
-        this.hudLangText = document.getElementById('hudLangText');
-
         this.exportDropdownBtn = document.getElementById('exportDropdownBtn');
         this.exportMenu = document.getElementById('exportMenu');
         this.copyListBtn = document.getElementById('copyListBtn');
         this.downloadCsvBtn = document.getElementById('downloadCsvBtn');
 
-        this.dashEstTotal = document.getElementById('dashEstTotal');
-        this.setBudgetBtn = document.getElementById('setBudgetBtn');
-        this.budgetProgressContainer = document.getElementById('budgetProgressContainer');
-        this.budgetLimitText = document.getElementById('budgetLimitText');
-        this.budgetRemainingText = document.getElementById('budgetRemainingText');
+        // Dashboard Badges & Elements
+        this.dashTotalItems = document.getElementById('dashTotalItems');
+        this.dashCompletedPercent = document.getElementById('dashCompletedPercent');
         this.dashProgressBar = document.getElementById('dashProgressBar');
+        this.dashEstTotal = document.getElementById('dashEstTotal');
 
         this.suggestionsContainer = document.getElementById('suggestionsContainer');
         this.seasonBadge = document.getElementById('seasonBadge');
@@ -80,7 +68,20 @@ class App {
         this.itemCountBadge = document.getElementById('itemCountBadge');
         this.clearCompletedBtn = document.getElementById('clearCompletedBtn');
         this.clearAllBtn = document.getElementById('clearAllBtn');
-        this.emptyCartVoiceBtn = document.getElementById('emptyCartVoiceBtn');
+
+        this.summaryTotalCount = document.getElementById('summaryTotalCount');
+        this.summaryPendingCount = document.getElementById('summaryPendingCount');
+        this.summaryTotalPrice = document.getElementById('summaryTotalPrice');
+
+        // Checkout Elements
+        this.headerCheckoutBtn = document.getElementById('headerCheckoutBtn');
+        this.footerCheckoutBtn = document.getElementById('footerCheckoutBtn');
+        this.checkoutModal = document.getElementById('checkoutModal');
+        this.closeCheckoutModalBtn = document.getElementById('closeCheckoutModalBtn');
+        this.cancelCheckoutBtn = document.getElementById('cancelCheckoutBtn');
+        this.confirmPayBtn = document.getElementById('confirmPayBtn');
+        this.checkoutItemsList = document.getElementById('checkoutItemsList');
+        this.checkoutTotalPayable = document.getElementById('checkoutTotalPayable');
 
         // Modals
         this.addItemModal = document.getElementById('addItemModal');
@@ -88,12 +89,6 @@ class App {
         this.closeAddItemModalBtn = document.getElementById('closeAddItemModalBtn');
         this.cancelAddItemModalBtn = document.getElementById('cancelAddItemModalBtn');
         this.manualAddForm = document.getElementById('manualAddForm');
-
-        this.setBudgetModal = document.getElementById('setBudgetModal');
-        this.closeBudgetModalBtn = document.getElementById('closeBudgetModalBtn');
-        this.saveBudgetBtn = document.getElementById('saveBudgetBtn');
-        this.clearBudgetBtn = document.getElementById('clearBudgetBtn');
-        this.budgetAmountInput = document.getElementById('budgetAmountInput');
 
         this.settingsModal = document.getElementById('settingsModal');
         this.openSettingsBtn = document.getElementById('openSettingsBtn');
@@ -118,26 +113,24 @@ class App {
         }
         if (settings.language) {
             this.languageSelect.value = settings.language;
-            this.updateHudLangText(settings.language);
         }
     }
 
     initEventListeners() {
+        // Improved Microphone Trigger
         const triggerMic = () => {
             if (this.soundEnabled) SoundFX.playMicStart();
             this.voiceManager.startListening();
         };
         this.micBtn.addEventListener('click', triggerMic);
-        this.hudMicBtn.addEventListener('click', triggerMic);
 
-        // Language Select
+        // Language Selector
         this.languageSelect.addEventListener('change', (e) => {
             const lang = e.target.value;
             this.voiceManager.setLanguage(lang);
             const settings = StorageManager.getSettings();
             settings.language = lang;
             StorageManager.saveSettings(settings);
-            this.updateHudLangText(lang);
             this.showToast(`Language set to ${e.target.options[e.target.selectedIndex].text}`);
         });
 
@@ -146,38 +139,25 @@ class App {
             this.soundEnabled = !this.soundEnabled;
             this.soundIcon.setAttribute('data-lucide', this.soundEnabled ? 'volume-2' : 'volume-x');
             this.soundFxToggle.checked = this.soundEnabled;
-            if (window.lucide) lucide.createIcons();
+            this.refreshIcons();
             this.showToast(this.soundEnabled ? 'Sound FX Enabled' : 'Sound FX Muted');
         });
 
-        // Header Voice Audio Spoken Feedback Toggle
-        this.voiceAudioToggleBtn.addEventListener('click', () => {
-            const settings = StorageManager.getSettings();
-            settings.voiceFeedback = !settings.voiceFeedback;
-            StorageManager.saveSettings(settings);
-            this.voiceFeedbackToggle.checked = settings.voiceFeedback;
-            this.voiceAudioStatusText.textContent = settings.voiceFeedback ? 'Voice Audio On' : 'Voice Audio Off';
-            this.showToast(settings.voiceFeedback ? 'Voice Audio Feedback Enabled' : 'Voice Audio Muted');
-        });
-
-        // Header Recipe Button
-        this.headerRecipeBtn.addEventListener('click', () => {
-            const recipeKey = 'pancake';
-            const items = RECIPE_BUNDLES[recipeKey];
-            if (items) {
-                items.forEach(item => this.addItem(item, false));
-                if (this.soundEnabled) SoundFX.playItemAdd();
-                this.showToast('Added Pancake Recipe bundle to cart!');
-                this.voiceManager.speak('Added pancake recipe ingredients to your cart.');
-            }
+        // Recipe Buttons Shortcut
+        this.headerRecipeBtn.addEventListener('click', () => this.addRecipeBundle('pancake'));
+        document.querySelectorAll('.recipe-bundle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const recipeKey = btn.getAttribute('data-recipe');
+                this.addRecipeBundle(recipeKey);
+            });
         });
 
         // Header Help Button
         this.headerHelpBtn.addEventListener('click', () => {
-            alert("🎤 Voice Commands Guide:\n\n• Say 'Add 2 litres of milk'\n• Say 'A dozen eggs'\n• Say 'Remove bread'\n• Say 'Find items under $5'\n• Say 'Empty my cart'");
+            alert("🎤 Voice Commands Reference Guide:\n\n• 'Add 2 litres of milk for $4'\n• 'Add 6 bananas'\n• 'Remove bread'\n• 'Find items under $5'\n• 'What should I buy?'\n• 'Checkout' or 'Clear my cart'");
         });
 
-        // Export Dropdown
+        // Export Menu Toggle
         this.exportDropdownBtn.addEventListener('click', () => {
             this.exportMenu.classList.toggle('hidden');
         });
@@ -198,7 +178,39 @@ class App {
             this.exportMenu.classList.add('hidden');
         });
 
-        // Search Input & Reset
+        // CHECKOUT Modal Triggers
+        const openCheckout = () => {
+            if (this.items.length === 0) {
+                this.showToast('Your cart is empty!', 'warning');
+                this.voiceManager.speak('Your cart is empty. Add items before checking out.');
+                return;
+            }
+            this.populateCheckoutModal();
+            this.checkoutModal.classList.remove('hidden');
+        };
+
+        this.headerCheckoutBtn.addEventListener('click', openCheckout);
+        this.footerCheckoutBtn.addEventListener('click', openCheckout);
+
+        this.closeCheckoutModalBtn.addEventListener('click', () => this.checkoutModal.classList.add('hidden'));
+        this.cancelCheckoutBtn.addEventListener('click', () => this.checkoutModal.classList.add('hidden'));
+
+        this.confirmPayBtn.addEventListener('click', () => {
+            const count = this.items.length;
+            const total = this.items.reduce((s, i) => s + ((i.price || 0) * i.quantity), 0);
+
+            this.items = [];
+            StorageManager.saveItems(this.items);
+            this.checkoutModal.classList.add('hidden');
+            this.render();
+
+            if (this.soundEnabled) SoundFX.playCheckPop();
+            const msg = `Checkout complete! Thank you for your purchase of ${count} items for $${total.toFixed(2)}.`;
+            this.showToast('Order completed successfully!');
+            this.voiceManager.speak(msg);
+        });
+
+        // Search Input
         this.searchInput.addEventListener('input', (e) => {
             this.searchQuery = e.target.value.toLowerCase().trim();
             this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
@@ -240,34 +252,18 @@ class App {
             });
         });
 
-        // Quick Add Empty State Pills
-        document.querySelectorAll('.quick-add-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const name = btn.getAttribute('data-item');
-                const category = btn.getAttribute('data-category');
-                const price = parseFloat(btn.getAttribute('data-price')) || null;
-
-                this.addItem({ name, quantity: 1, category, price });
-                if (this.soundEnabled) SoundFX.playItemAdd();
-                this.showToast(`Added ${name} to cart`);
-                this.voiceManager.speak(`Added ${name} to your cart.`);
-            });
-        });
-
-        // Empty Cart Buttons
-        const emptyCartAction = () => {
+        // Clear Buttons
+        this.clearAllBtn.addEventListener('click', () => {
             if (this.items.length === 0) return;
-            if (confirm('Are you sure you want to empty your shopping cart?')) {
+            if (confirm('Are you sure you want to clear your shopping cart?')) {
                 this.items = [];
                 StorageManager.saveItems(this.items);
                 this.render();
                 if (this.soundEnabled) SoundFX.playDelete();
-                this.showToast('Cart emptied');
-                this.voiceManager.speak('Emptied your cart.');
+                this.showToast('Cart cleared');
+                this.voiceManager.speak('Cleared your shopping cart.');
             }
-        };
-        this.clearAllBtn.addEventListener('click', emptyCartAction);
-        if (this.emptyCartVoiceBtn) this.emptyCartVoiceBtn.addEventListener('click', emptyCartAction);
+        });
 
         this.clearCompletedBtn.addEventListener('click', () => {
             this.items = this.items.filter(i => !i.completed);
@@ -277,32 +273,6 @@ class App {
             this.showToast('Cleared completed items');
         });
 
-        // Set Budget Modal
-        this.setBudgetBtn.addEventListener('click', () => {
-            this.budgetAmountInput.value = this.budgetLimit || '';
-            this.setBudgetModal.classList.remove('hidden');
-        });
-        this.closeBudgetModalBtn.addEventListener('click', () => this.setBudgetModal.classList.add('hidden'));
-
-        this.saveBudgetBtn.addEventListener('click', () => {
-            const val = parseFloat(this.budgetAmountInput.value);
-            if (!isNaN(val) && val > 0) {
-                this.budgetLimit = val;
-                localStorage.setItem('vcs_budget_limit', val.toString());
-                this.setBudgetModal.classList.add('hidden');
-                this.renderShoppingList();
-                this.showToast(`Budget set to $${val.toFixed(2)}`);
-            }
-        });
-
-        this.clearBudgetBtn.addEventListener('click', () => {
-            this.budgetLimit = null;
-            localStorage.removeItem('vcs_budget_limit');
-            this.setBudgetModal.classList.add('hidden');
-            this.renderShoppingList();
-            this.showToast('Cleared budget limit');
-        });
-
         // Theme Toggle
         this.themeToggleBtn.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
@@ -310,18 +280,10 @@ class App {
             settings.theme = isDark ? 'dark' : 'light';
             StorageManager.saveSettings(settings);
             this.themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            if (window.lucide) lucide.createIcons();
+            this.refreshIcons();
         });
 
-        // Voice-Only HUD Mode
-        this.toggleVoiceHudBtn.addEventListener('click', () => {
-            this.voiceHudOverlay.classList.remove('hidden');
-        });
-        this.exitVoiceHudBtn.addEventListener('click', () => {
-            this.voiceHudOverlay.classList.add('hidden');
-        });
-
-        // Add Item Modal
+        // Manual Add Item Modal
         this.openAddItemModalBtn.addEventListener('click', () => this.addItemModal.classList.remove('hidden'));
         this.closeAddItemModalBtn.addEventListener('click', () => this.addItemModal.classList.add('hidden'));
         this.cancelAddItemModalBtn.addEventListener('click', () => this.addItemModal.classList.add('hidden'));
@@ -372,16 +334,49 @@ class App {
         });
     }
 
+    addRecipeBundle(recipeKey) {
+        const items = RECIPE_BUNDLES[recipeKey];
+        if (items) {
+            items.forEach(item => this.addItem(item, false));
+            if (this.soundEnabled) SoundFX.playItemAdd();
+            this.render();
+            const recipeName = recipeKey.charAt(0).toUpperCase() + recipeKey.slice(1);
+            this.showToast(`Added ${recipeName} bundle to cart!`);
+            this.voiceManager.speak(`Added ${recipeName} ingredients to your cart.`);
+        }
+    }
+
+    populateCheckoutModal() {
+        let total = 0;
+        let html = '';
+
+        this.items.forEach(item => {
+            const itemTotal = (item.price || 0) * item.quantity;
+            total += itemTotal;
+            html += `
+                <div class="flex items-center justify-between py-2">
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-slate-200">${item.name} x${item.quantity}</p>
+                        <p class="text-[10px] text-slate-400">${item.category}</p>
+                    </div>
+                    <span class="font-semibold text-slate-700 dark:text-slate-300">$${itemTotal.toFixed(2)}</span>
+                </div>
+            `;
+        });
+
+        this.checkoutItemsList.innerHTML = html;
+        this.checkoutTotalPayable.textContent = `$${total.toFixed(2)}`;
+        this.refreshIcons();
+    }
+
     async handleSpeechResult(result) {
         if (result.interim) {
             this.transcriptText.textContent = `"${result.interim}"`;
-            this.hudTranscriptBox.textContent = `"${result.interim}"`;
         }
 
         if (result.final) {
             const utterance = result.final;
             this.transcriptText.textContent = `"${utterance}"`;
-            this.hudTranscriptBox.textContent = `"${utterance}"`;
             await this.processUtterance(utterance);
         }
     }
@@ -389,18 +384,19 @@ class App {
     async processUtterance(utteranceText) {
         this.setVoiceStatus('thinking', 'Processing command...');
 
-        // Check for empty cart command
-        if (utteranceText.toLowerCase().includes('empty my cart') || utteranceText.toLowerCase().includes('clear my cart')) {
-            this.items = [];
-            StorageManager.saveItems(this.items);
-            this.render();
-            if (this.soundEnabled) SoundFX.playDelete();
-            this.voiceManager.speak('Emptied your shopping cart.');
-            this.showToast('Emptied shopping cart');
+        // Check for checkout or empty cart voice command
+        if (utteranceText.toLowerCase().includes('checkout')) {
+            if (this.items.length === 0) {
+                this.voiceManager.speak('Your cart is empty. Add items before checking out.');
+            } else {
+                this.populateCheckoutModal();
+                this.checkoutModal.classList.remove('hidden');
+                this.voiceManager.speak('Opened checkout summary.');
+            }
             this.setVoiceStatus('idle', 'Tap mic to speak');
             return;
         }
-        
+
         try {
             const action = await NLPParser.parse(utteranceText);
 
@@ -541,7 +537,7 @@ class App {
             this.showToast('Cart is empty', 'warning');
             return;
         }
-        let text = `🛒 VoiceCart - Shopping Cart List (${new Date().toLocaleDateString()})\n\n`;
+        let text = `🛒 VoiceCart AI - Shopping List (${new Date().toLocaleDateString()})\n\n`;
         this.items.forEach((item, idx) => {
             const check = item.completed ? '[x]' : '[ ]';
             const priceStr = item.price ? ` ($${item.price.toFixed(2)})` : '';
@@ -581,46 +577,38 @@ class App {
 
         if (state === 'listening') {
             this.micBtn.classList.add('mic-active');
+            if (this.micRingGlow) this.micRingGlow.classList.remove('hidden');
             this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
         } else if (state === 'speaking') {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+            if (this.micRingGlow) this.micRingGlow.classList.add('hidden');
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
         } else if (state === 'thinking') {
             this.micBtn.classList.remove('mic-active');
+            if (this.micRingGlow) this.micRingGlow.classList.add('hidden');
             this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-spin';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
         } else {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+            if (this.micRingGlow) this.micRingGlow.classList.add('hidden');
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
         }
-    }
-
-    updateHudLangText(langCode) {
-        const langMap = {
-            'en-US': 'English (US)',
-            'es-ES': 'Español (ES)',
-            'fr-FR': 'Français (FR)',
-            'de-DE': 'Deutsch (DE)',
-            'hi-IN': 'हिन्दी (IN)',
-            'zh-CN': '中文 (CN)'
-        };
-        this.hudLangText.textContent = langMap[langCode] || langCode;
     }
 
     updateCategoryTabStyles() {
         document.querySelectorAll('.cat-tab').forEach(btn => {
             const cat = btn.getAttribute('data-category');
             if (cat === this.activeCategory) {
-                btn.className = 'cat-tab bg-emerald-600 text-white px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shadow-xs';
+                btn.className = 'cat-tab bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg font-medium whitespace-nowrap shadow-sm';
             } else {
-                btn.className = 'cat-tab bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3.5 py-1.5 rounded-full font-medium hover:bg-slate-200 whitespace-nowrap';
+                btn.className = 'cat-tab bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3.5 py-1.5 rounded-lg font-medium hover:bg-slate-200 whitespace-nowrap';
             }
         });
     }
@@ -647,6 +635,7 @@ class App {
 
         this.shoppingListContainer.innerHTML = filtered.map(item => this.createItemCardHTML(item)).join('');
 
+        // Event listeners for item cards
         this.shoppingListContainer.querySelectorAll('.item-checkbox').forEach(chk => {
             chk.addEventListener('change', (e) => {
                 const id = e.target.getAttribute('data-id');
@@ -695,29 +684,23 @@ class App {
             });
         });
 
-        // Total calculations & budget meter
+        // Dashboard calculation updates
+        const totalItemsCount = this.items.length;
+        const completedCount = this.items.filter(i => i.completed).length;
+        const pendingCount = totalItemsCount - completedCount;
+        const pctCompleted = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
         const totalEstPrice = this.items.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
+
+        this.dashTotalItems.textContent = `${totalItemsCount} Items`;
+        this.dashCompletedPercent.textContent = `${pctCompleted}%`;
+        this.dashProgressBar.style.width = `${pctCompleted}%`;
         this.dashEstTotal.textContent = `$${totalEstPrice.toFixed(2)}`;
 
-        if (this.budgetLimit) {
-            this.budgetProgressContainer.classList.remove('hidden');
-            this.budgetLimitText.textContent = `$${this.budgetLimit.toFixed(2)}`;
-            const remaining = this.budgetLimit - totalEstPrice;
-            if (remaining >= 0) {
-                this.budgetRemainingText.textContent = `$${remaining.toFixed(2)} remaining`;
-                this.budgetRemainingText.className = 'text-emerald-600 font-semibold';
-            } else {
-                this.budgetRemainingText.textContent = `$${Math.abs(remaining).toFixed(2)} over budget!`;
-                this.budgetRemainingText.className = 'text-rose-500 font-bold';
-            }
-            const pct = Math.min(100, Math.round((totalEstPrice / this.budgetLimit) * 100));
-            this.dashProgressBar.style.width = `${pct}%`;
-            this.dashProgressBar.className = pct > 100 ? 'bg-rose-500 h-full transition-all' : 'bg-emerald-500 h-full transition-all';
-        } else {
-            this.budgetProgressContainer.classList.add('hidden');
-        }
+        this.summaryTotalCount.textContent = totalItemsCount;
+        this.summaryPendingCount.textContent = pendingCount;
+        this.summaryTotalPrice.textContent = `$${totalEstPrice.toFixed(2)}`;
 
-        if (window.lucide) lucide.createIcons();
+        this.refreshIcons();
     }
 
     createItemCardHTML(item) {
@@ -725,9 +708,9 @@ class App {
         const isDoneClass = item.completed ? 'item-completed' : '';
 
         return `
-            <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-4 flex items-center justify-between gap-3 ${isDoneClass} border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-xs">
+            <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3 ${isDoneClass} hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-xs">
                 <div class="flex items-center space-x-3.5 min-w-0">
-                    <input type="checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''} class="item-checkbox w-5 h-5 text-emerald-600 rounded cursor-pointer accent-emerald-600">
+                    <input type="checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''} class="item-checkbox w-5 h-5 text-indigo-600 rounded cursor-pointer accent-indigo-600">
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2">
                             <span class="item-title font-semibold text-sm truncate text-slate-900 dark:text-white">${item.name}</span>
@@ -740,7 +723,7 @@ class App {
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-700/80 rounded-xl px-2.5 py-1 border border-slate-200/60 dark:border-slate-600/60">
+                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 border border-slate-200 dark:border-slate-700">
                         <button data-id="${item.id}" class="qty-minus-btn text-slate-500 hover:text-slate-900 dark:hover:text-white p-0.5">
                             <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                         </button>
@@ -768,7 +751,7 @@ class App {
                 <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-amber-700 dark:text-amber-300">📦 Low Stock Warning</span>
+                            <span class="font-bold text-amber-700 dark:text-amber-300">📦 Restock Suggestion</span>
                             <span class="px-2 py-0.5 rounded bg-amber-200 dark:bg-amber-900/60 text-[10px] text-amber-900 dark:text-amber-200 font-semibold">${item.category}</span>
                         </div>
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
@@ -835,7 +818,7 @@ class App {
             });
         });
 
-        if (window.lucide) lucide.createIcons();
+        this.refreshIcons();
     }
 
     getBadgeClass(category) {
@@ -870,9 +853,16 @@ class App {
         }, 3000);
     }
 
+    refreshIcons() {
+        if (window.lucide && typeof lucide.createIcons === 'function') {
+            lucide.createIcons();
+        }
+    }
+
     render() {
         this.renderShoppingList();
         this.renderSuggestions();
+        this.refreshIcons();
     }
 }
 

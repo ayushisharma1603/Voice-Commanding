@@ -24,18 +24,19 @@
             }
         }
     </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased transition-colors duration-300">
 
     <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
             <!-- Brand Logo & Name -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                 </div>
                 <div class="flex items-baseline space-x-1">
@@ -45,11 +46,11 @@
                 </div>
             </div>
 
-            <!-- Top Header Action Icons -->
-            <div class="flex items-center space-x-2 sm:space-x-3">
+            <!-- Top Header Action Icons & Buttons -->
+            <div class="flex items-center space-x-1 sm:space-x-2">
                 <!-- Multilingual Language Selector -->
                 <div class="relative">
-                    <select id="languageSelect" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-1.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <select id="languageSelect" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium">
                         <option value="en-US">🇺🇸 English</option>
                         <option value="es-ES">🇪🇸 Español</option>
                         <option value="fr-FR">🇫🇷 Français</option>
@@ -59,25 +60,26 @@
                     </select>
                 </div>
 
-                <!-- Recipe Bundles Icon -->
-                <button id="headerRecipeBtn" title="Recipe Bundles" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <i data-lucide="utensils" class="w-5 h-5 text-amber-500"></i>
+                <!-- Recipe Bundles Icon Button -->
+                <button id="headerRecipeBtn" title="Recipe Bundles" class="header-icon-btn flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium">
+                    <i data-lucide="utensils" class="w-4 h-4 text-amber-500"></i>
+                    <span class="hidden md:inline">Recipes</span>
                 </button>
 
                 <!-- Sound FX Toggle Button -->
-                <button id="headerSoundBtn" title="Toggle Sound FX" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <i data-lucide="volume-2" id="soundIcon" class="w-5 h-5 text-indigo-500"></i>
+                <button id="headerSoundBtn" title="Toggle Sound FX" class="header-icon-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                    <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4 text-indigo-500"></i>
                 </button>
 
                 <!-- Help / Guide Button -->
-                <button id="headerHelpBtn" title="Voice Guide" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <i data-lucide="help-circle" class="w-5 h-5 text-indigo-500"></i>
+                <button id="headerHelpBtn" title="Voice Guide" class="header-icon-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-indigo-500"></i>
                 </button>
 
                 <!-- Export List Button -->
-                <div class="relative group">
-                    <button id="exportDropdownBtn" title="Export Shopping List" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                        <i data-lucide="download" class="w-5 h-5"></i>
+                <div class="relative">
+                    <button id="exportDropdownBtn" title="Export Shopping List" class="header-icon-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                        <i data-lucide="download" class="w-4 h-4"></i>
                     </button>
                     <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-50 text-xs">
                         <button id="copyListBtn" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2">
@@ -91,19 +93,20 @@
                     </div>
                 </div>
 
-                <!-- Hands-Free Voice Mode Toggle -->
-                <button id="toggleVoiceHudBtn" title="Hands-Free Voice Mode" class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60">
-                    <i data-lucide="smartphone" class="w-5 h-5"></i>
-                </button>
-
                 <!-- Dark Theme Toggle Button -->
-                <button id="themeToggleBtn" title="Toggle Dark/Light Theme" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
+                <button id="themeToggleBtn" title="Toggle Dark/Light Theme" class="header-icon-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                    <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
                 </button>
 
                 <!-- Settings Button -->
-                <button id="openSettingsBtn" title="Assistant Settings" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
+                <button id="openSettingsBtn" title="Assistant Settings" class="header-icon-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Dedicated Top Header CHECKOUT Button -->
+                <button id="headerCheckoutBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-emerald-500/20 transition-all">
+                    <i data-lucide="check-square" class="w-4 h-4"></i>
+                    <span>Checkout</span>
                 </button>
             </div>
         </div>
@@ -112,27 +115,28 @@
     <!-- Main Container -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Voice Command Central Controller -->
-        <section class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center border border-indigo-100 dark:border-indigo-900/30">
-            <div class="absolute -top-20 -right-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <!-- Enhanced Voice Command Central Controller -->
+        <section class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center border border-indigo-100 dark:border-indigo-900/40">
+            <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="relative z-10 space-y-5">
                 <!-- Status Badge -->
-                <div class="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold shadow-xs">
+                <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold shadow-xs">
                     <span id="voiceStatusDot" class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
                     <span id="voiceStatusText">Tap Mic or Say Command</span>
                 </div>
 
-                <!-- Main Interactive Blue/Indigo Voice Button -->
-                <div class="flex justify-center items-center my-4">
-                    <button id="micBtn" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex flex-col items-center justify-center shadow-xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none">
-                        <i data-lucide="mic" id="micIcon" class="w-8 h-8 sm:w-10 sm:h-10"></i>
-                        <span id="micSubtext" class="text-[10px] uppercase font-extrabold tracking-widest mt-1">TAP TO SPEAK</span>
+                <!-- Ultra-Improved Glowing Blue/Indigo Mic Button -->
+                <div class="flex justify-center items-center my-6 relative">
+                    <div id="micRingGlow" class="absolute w-32 h-32 rounded-full bg-indigo-500/20 animate-ping pointer-events-none"></div>
+                    <button id="micBtn" class="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white flex flex-col items-center justify-center shadow-2xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none ring-4 ring-indigo-300/40 dark:ring-indigo-700/40">
+                        <i data-lucide="mic" id="micIcon" class="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-md"></i>
+                        <span id="micSubtext" class="text-[10px] uppercase font-black tracking-widest mt-1 text-indigo-100">TAP TO SPEAK</span>
                     </button>
                 </div>
 
-                <!-- Audio Waveform Visualizer -->
+                <!-- Dynamic Audio Waveform Visualizer -->
                 <div id="audioWaveform" class="hidden items-center justify-center h-8">
                     <div class="audio-bar"></div>
                     <div class="audio-bar"></div>
@@ -142,38 +146,38 @@
                 </div>
 
                 <!-- Speech Transcript Bubble -->
-                <div id="transcriptBox" class="max-w-xl mx-auto min-h-[48px] p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm italic text-slate-700 dark:text-slate-200 shadow-inner">
+                <div id="transcriptBox" class="max-w-xl mx-auto min-h-[50px] p-4 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm italic text-slate-700 dark:text-slate-200 shadow-inner">
                     <span id="transcriptText">Try saying: "Add 2 bottles of organic milk for $4" or "Add pancake ingredients"</span>
                 </div>
 
                 <!-- Quick Commands & Recipe Shortcuts -->
-                <div class="space-y-2">
+                <div class="space-y-3 pt-1">
                     <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
-                        <span class="text-slate-400 font-medium">Quick Commands:</span>
-                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Add 6 bananas"</button>
-                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Remove bread"</button>
-                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Find items under $5"</button>
-                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"What should I buy?"</button>
+                        <span class="text-slate-400 font-medium">Quick Voice Hints:</span>
+                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs font-medium">"Add 6 bananas"</button>
+                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs font-medium">"Remove bread"</button>
+                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs font-medium">"Find items under $5"</button>
+                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs font-medium">"What should I buy?"</button>
                     </div>
 
-                    <!-- Recipe Bundle Voice Shortcuts -->
-                    <div class="flex items-center justify-center space-x-2 text-xs pt-1">
+                    <!-- Recipe Bundle Shortcuts -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
                         <span class="text-slate-400 font-medium flex items-center space-x-1">
                             <i data-lucide="utensils" class="w-3.5 h-3.5 text-amber-500"></i>
                             <span>Recipe Bundles:</span>
                         </span>
-                        <button data-recipe="pancake" class="recipe-bundle-btn px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 font-medium">🥞 Pancake Mix</button>
-                        <button data-recipe="guacamole" class="recipe-bundle-btn px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-medium">🥑 Guacamole Kit</button>
-                        <button data-recipe="salad" class="recipe-bundle-btn px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 font-medium">🥗 Fresh Salad</button>
+                        <button data-recipe="pancake" class="recipe-bundle-btn px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 font-semibold">🥞 Pancake Mix</button>
+                        <button data-recipe="guacamole" class="recipe-bundle-btn px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold">🥑 Guacamole Kit</button>
+                        <button data-recipe="salad" class="recipe-bundle-btn px-3 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 font-semibold">🥗 Fresh Salad</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Budget & Dashboard Summary Bar -->
+        <!-- Dashboard Summary & Budget Progress Bar -->
         <section class="glass-card rounded-2xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div class="flex items-center space-x-3 p-3 bg-slate-100/60 dark:bg-slate-800/60 rounded-xl">
-                <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                 </div>
                 <div>
@@ -183,7 +187,7 @@
             </div>
 
             <div class="flex items-center space-x-3 p-3 bg-slate-100/60 dark:bg-slate-800/60 rounded-xl">
-                <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <i data-lucide="check-circle-2" class="w-5 h-5"></i>
                 </div>
                 <div class="w-full">
@@ -198,7 +202,7 @@
             </div>
 
             <div class="flex items-center space-x-3 p-3 bg-slate-100/60 dark:bg-slate-800/60 rounded-xl">
-                <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <i data-lucide="dollar-sign" class="w-5 h-5"></i>
                 </div>
                 <div>
@@ -208,12 +212,12 @@
             </div>
         </section>
 
-        <!-- Smart Suggestions Accordion -->
+        <!-- Smart Recommendations Section -->
         <section class="glass-card rounded-2xl p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
-                    <h2 class="text-base font-semibold">Smart Suggestions</h2>
+                    <h2 class="text-base font-semibold">Smart Recommendations</h2>
                     <span id="seasonBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">Summer</span>
                 </div>
                 <button id="refreshSuggestionsBtn" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center space-x-1">
@@ -228,7 +232,7 @@
             </div>
         </section>
 
-        <!-- Shopping List Controls: Search & Category Filter -->
+        <!-- Shopping List Controls: Search & Category Filters -->
         <section class="glass-card rounded-2xl p-5 shadow-sm space-y-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="relative w-full sm:w-80">
@@ -253,7 +257,7 @@
                 <button id="resetFilterBtn" class="font-bold underline hover:text-indigo-900">Reset</button>
             </div>
 
-            <!-- Category Filter Horizontal Tabs -->
+            <!-- Category Tabs -->
             <div class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none text-xs" id="categoryFilterTabs">
                 <button data-category="ALL" class="cat-tab bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg font-medium whitespace-nowrap shadow-sm">All Items</button>
                 <button data-category="Produce" class="cat-tab bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3.5 py-1.5 rounded-lg font-medium hover:bg-slate-200 whitespace-nowrap">🥦 Produce</button>
@@ -273,7 +277,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-lg font-bold flex items-center space-x-2">
                     <span>Shopping List</span>
-                    <span id="itemCountBadge" class="text-xs bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 rounded-full font-bold">4 items</span>
+                    <span id="itemCountBadge" class="text-xs bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 rounded-full font-bold">0 items</span>
                 </h2>
                 <div class="flex items-center space-x-3 text-xs">
                     <button id="clearCompletedBtn" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium">Clear Completed</button>
@@ -282,12 +286,12 @@
                 </div>
             </div>
 
-            <!-- Items Card List -->
+            <!-- Items Cards List -->
             <div id="shoppingListContainer" class="space-y-3">
                 <!-- Dynamically rendered list items -->
             </div>
 
-            <!-- Empty State Placeholder -->
+            <!-- Empty List State -->
             <div id="emptyListState" class="hidden glass-card rounded-2xl p-12 text-center space-y-3">
                 <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                     <i data-lucide="shopping-bag" class="w-8 h-8"></i>
@@ -296,18 +300,54 @@
                 <p class="text-xs text-slate-500 max-w-sm mx-auto">Tap the microphone above and say <span class="font-semibold text-indigo-600">"Add milk and apples"</span> to quickly build your list!</p>
             </div>
 
-            <!-- Shopping List Summary Footer -->
-            <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between text-sm gap-2">
+            <!-- Shopping List Summary Footer & Prominent CHECKOUT Button -->
+            <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-100 dark:border-indigo-900/30">
                 <div class="flex items-center space-x-4 text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                     <div>Total: <span id="summaryTotalCount" class="font-bold text-slate-900 dark:text-slate-100">0</span> items</div>
                     <div>Remaining: <span id="summaryPendingCount" class="font-bold text-indigo-600 dark:text-indigo-400">0</span></div>
+                    <div>Est. Total: <span id="summaryTotalPrice" class="text-base font-bold text-emerald-600 dark:text-emerald-400">$0.00</span></div>
                 </div>
-                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Est. Total: <span id="summaryTotalPrice" class="text-base font-bold text-emerald-600 dark:text-emerald-400">$0.00</span>
-                </div>
+                
+                <!-- Main CHECKOUT Button -->
+                <button id="footerCheckoutBtn" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl text-sm flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 transition-all">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span>PROCEED TO CHECKOUT</span>
+                </button>
             </div>
         </section>
     </main>
+
+    <!-- Modal: Checkout Summary & Order Confirmation -->
+    <div id="checkoutModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold flex items-center space-x-2 text-slate-900 dark:text-white">
+                    <i data-lucide="shopping-bag" class="w-6 h-6 text-emerald-600"></i>
+                    <span>Cart Checkout Summary</span>
+                </h3>
+                <button id="closeCheckoutModalBtn" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="checkoutItemsList" class="max-h-60 overflow-y-auto space-y-2 text-xs divide-y divide-slate-100 dark:divide-slate-800 pr-1">
+                <!-- Dynamically populated checkout items -->
+            </div>
+
+            <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex justify-between items-center text-sm font-bold">
+                <span class="text-emerald-900 dark:text-emerald-200">Total Payable:</span>
+                <span id="checkoutTotalPayable" class="text-lg text-emerald-600 dark:text-emerald-400">$0.00</span>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button id="cancelCheckoutBtn" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800">Cancel</button>
+                <button id="confirmPayBtn" class="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>Complete Order</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal: Add Item Manual Fallback -->
     <div id="addItemModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -405,35 +445,6 @@
             </div>
             <div class="pt-2 flex justify-end">
                 <button id="saveSettingsBtn" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">Save Preferences</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Voice-Only Mode HUD Overlay -->
-    <div id="voiceHudOverlay" class="hidden voice-hud-overlay">
-        <button id="exitVoiceHudBtn" class="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white">
-            <i data-lucide="x" class="w-6 h-6"></i>
-        </button>
-
-        <div class="text-center space-y-6 max-w-lg">
-            <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping"></span>
-                <span>Hands-Free Voice Mode</span>
-            </div>
-
-            <div class="my-6">
-                <button id="hudMicBtn" class="w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow-2xl shadow-indigo-500/50 hover:scale-105 transition-all">
-                    <i data-lucide="mic" class="w-14 h-14"></i>
-                </button>
-            </div>
-
-            <div id="hudTranscriptBox" class="p-4 rounded-2xl bg-white/10 border border-white/20 text-lg font-medium italic min-h-[64px] flex items-center justify-center">
-                Say a command, e.g., "Add 2 bottles of water"
-            </div>
-
-            <div class="text-xs text-slate-400 space-y-1">
-                <p>Language: <span id="hudLangText" class="text-white font-semibold">English (US)</span></p>
-                <p>Speak clearly into your device's microphone</p>
             </div>
         </div>
     </div>
