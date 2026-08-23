@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoiceCart AI - Voice Command Shopping Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -42,7 +45,7 @@
                         <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                             VoiceCart AI
                         </h1>
-                        <span class="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">PRO</span>
+                            <!-- <span class="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">PRO</span> -->
                     </div>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Voice-Powered Shopping Assistant</p>
                 </div>
@@ -53,12 +56,8 @@
                 <!-- Multilingual Language Selector -->
                 <div class="relative">
                     <select id="languageSelect" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-1.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                        <option value="en-US">🇺🇸 English</option>
-                        <option value="es-ES">🇪🇸 Español</option>
-                        <option value="fr-FR">🇫🇷 Français</option>
-                        <option value="de-DE">🇩🇪 Deutsch</option>
-                        <option value="hi-IN">🇮🇳 हिन्दी</option>
-                        <option value="zh-CN">🇨🇳 中文</option>
+                            <option value="en-US">English</option>
+                            <option value="hi-IN">हिन्दी</option>
                     </select>
                 </div>
 
@@ -130,8 +129,8 @@
                 </div>
 
                 <!-- Speech Transcript Bubble -->
-                <div id="transcriptBox" class="max-w-xl mx-auto min-h-[48px] p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm italic text-slate-700 dark:text-slate-200 shadow-inner">
-                    <span id="transcriptText">Try saying: "Add 2 bottles of organic milk for $4" or "Add pancake ingredients"</span>
+                    <div id="transcriptBox" class="max-w-xl mx-auto min-h-[48px] p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm italic text-slate-700 dark:text-slate-200 shadow-inner">
+                    <span id="transcriptText">Try saying: "Add 2 bottles of organic milk for ₹4" or "Add pancake ingredients"</span>
                 </div>
 
                 <!-- Quick Recipe Presets & Voice Hints -->
@@ -140,7 +139,7 @@
                         <span class="text-slate-400 font-medium">Quick Commands:</span>
                         <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Add 6 bananas"</button>
                         <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Remove bread"</button>
-                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Find items under $5"</button>
+                        <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"Find items under ₹5"</button>
                         <button class="hint-chip bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-xs">"What should I buy?"</button>
                     </div>
 
@@ -186,12 +185,12 @@
             </div>
 
             <div class="flex items-center space-x-3 p-3 bg-slate-100/60 dark:bg-slate-800/60 rounded-xl">
-                <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <i data-lucide="dollar-sign" class="w-5 h-5"></i>
-                </div>
+                    <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                    </div>
                 <div>
                     <p class="text-slate-400">Estimated Total</p>
-                    <p id="dashEstTotal" class="text-sm font-bold text-slate-900 dark:text-slate-100">$0.00</p>
+                    <p id="dashEstTotal" class="text-sm font-bold text-slate-900 dark:text-slate-100">₹0.00</p>
                 </div>
             </div>
         </section>
@@ -221,7 +220,7 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="relative w-full sm:w-80">
                     <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search items, brands, or 'under $5'..." class="w-full pl-9 pr-8 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="searchInput" placeholder="Search items, brands, or 'under ₹5'..." class="w-full pl-9 pr-8 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <button id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
@@ -237,7 +236,7 @@
 
             <!-- Active Filter Banner -->
             <div id="activeFilterBanner" class="hidden items-center justify-between px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-xs text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                <span id="activeFilterText">Active filter: "organic under $5"</span>
+                <span id="activeFilterText">Active filter: "organic under ₹5"</span>
                 <button id="resetFilterBtn" class="font-bold underline hover:text-indigo-900">Reset</button>
             </div>
 
@@ -291,8 +290,12 @@
                     <div>Remaining: <span id="summaryPendingCount" class="font-bold text-indigo-600 dark:text-indigo-400">0</span></div>
                 </div>
                 <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Est. Total: <span id="summaryTotalPrice" class="text-base font-bold text-emerald-600 dark:text-emerald-400">$0.00</span>
+                    Est. Total: <span id="summaryTotalPrice" class="text-base font-bold text-emerald-600 dark:text-emerald-400">₹0.00</span>
                 </div>
+                <button id="checkoutBtn" type="button" onclick="window.app && window.app.openCheckout()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 shadow-sm">
+                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                    <span>Checkout</span>
+                </button>
             </div>
         </section>
     </main>
@@ -346,7 +349,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium mb-1">Price ($)</label>
+                        <label class="block text-xs font-medium mb-1">Price (₹)</label>
                         <input type="number" id="manualPriceInput" step="0.01" placeholder="e.g. 3.99" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
@@ -359,6 +362,50 @@
                     <button type="submit" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">Save Item</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal: Checkout -->
+    <div id="checkoutModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold">Checkout</h3>
+                <button id="closeCheckoutModalBtn" class="text-slate-400 hover:text-slate-600" title="Close checkout">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="checkoutFormView" class="space-y-4 text-xs">
+                <div id="checkoutItems" class="max-h-40 overflow-y-auto space-y-2"></div>
+                <div class="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-3 text-sm font-bold">
+                    <span>Total to pay</span>
+                    <span id="checkoutTotal" class="text-emerald-600 dark:text-emerald-400">₹0.00</span>
+                </div>
+                <fieldset class="space-y-2">
+                    <legend class="font-semibold mb-2">Payment method</legend>
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                        <input type="radio" name="paymentMethod" value="UPI" checked>
+                        <span>UPI</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                        <input type="radio" name="paymentMethod" value="Card">
+                        <span>Debit / Credit Card</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                        <input type="radio" name="paymentMethod" value="Cash on Delivery">
+                        <span>Cash on Delivery</span>
+                    </label>
+                </fieldset>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">This local demo confirms the order. Connect a payment provider before accepting real payments.</p>
+                <button id="placeOrderBtn" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold">Place Order</button>
+            </div>
+            <div id="checkoutSuccessView" class="hidden text-center space-y-3 py-4">
+                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <i data-lucide="check" class="w-6 h-6"></i>
+                </div>
+                <h4 class="font-bold text-base">Order placed successfully</h4>
+                <p id="orderConfirmationText" class="text-xs text-slate-500 dark:text-slate-400"></p>
+                <button id="doneCheckoutBtn" class="w-full px-4 py-2.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-semibold">Done</button>
+            </div>
         </div>
     </div>
 
@@ -398,11 +445,7 @@
                         <span>1.5x (Fast)</span>
                     </div>
                 </div>
-                <div>
-                    <label class="block font-medium mb-1">Google Gemini API Key (Optional AI Enhancement)</label>
-                    <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <p class="text-[10px] text-slate-400 mt-1">Leave empty to use built-in local NLP parsing engine.</p>
-                </div>
+                <!-- Gemini API key removed per polish guide -->
             </div>
             <div class="pt-2 flex justify-end">
                 <button id="saveSettingsBtn" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">Save Preferences</button>

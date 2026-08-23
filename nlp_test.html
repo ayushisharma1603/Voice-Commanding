@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VoiceCart AI — NLP Test Console</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root{--max:980px}
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 32px; background: linear-gradient(180deg,#f8fafc, #f1f5f9); }
+    .card { background: rgba(255,255,255,0.95); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(2,6,23,0.06); max-width:var(--max); margin: 12px auto; border:1px solid rgba(15,23,42,0.04); }
+    label{font-weight:600;color:#0f172a}
+    textarea { width:100%; min-height:96px; font-size:15px; padding:12px; border-radius:10px; border:1px solid rgba(2,6,23,0.06); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); resize:vertical }
+    pre { background:#0b1220; color:#dbeafe; padding:14px; border-radius:10px; overflow:auto; border:1px solid rgba(255,255,255,0.03); }
+    .samples button { margin:6px 8px 6px 0; padding:6px 10px; border-radius:999px; border:1px solid rgba(15,23,42,0.06); background:white }
+    .controls { display:flex; gap:10px; margin-top:10px; }
+    .controls .hint-chip { padding:8px 12px; border-radius:10px; }
+    .result-header{display:flex;align-items:center;justify-content:space-between}
+    .small-muted{color:#64748b;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin:0 0 8px 0">VoiceCart AI — NLP Test Console</h2>
+    <p style="margin:0 0 12px 0; color:#475569">Type an utterance or click a sample to see the parsed intent and extracted entities.</p>
+
+    <div>
+      <label for="utterance">Utterance</label>
+      <textarea id="utterance" placeholder='e.g. "Add 2 bottles of organic milk for ₹4"'></textarea>
+      <div class="controls">
+        <button id="parseBtn" class="hint-chip bg-indigo-600 text-white">Parse</button>
+        <button id="clearBtn" class="hint-chip bg-slate-100">Clear</button>
+        <button id="copyResultBtn" class="hint-chip bg-emerald-100">Copy JSON</button>
+        <div style="flex:1"></div>
+        <div class="small-muted">Press <strong>Enter</strong> to parse</div>
+      </div>
+    </div>
+
+    <div class="result-header">
+      <h3 style="margin-top:16px;margin-bottom:8px">Result</h3>
+      <div class="small-muted">Parsed output from <strong>NLPParser</strong></div>
+    </div>
+    <pre id="result">{ "info": "no parse yet" }</pre>
+
+    <h3 style="margin-top:14px">Sample Utterances</h3>
+    <div class="samples">
+      <button class="hint-chip" data-txt="Add 2 bottles of organic milk for ₹4">Add 2 bottles of organic milk for ₹4</button>
+      <button class="hint-chip" data-txt="Add pancake ingredients">Add pancake ingredients</button>
+      <button class="hint-chip" data-txt="Remove bread from my list">Remove bread</button>
+      <button class="hint-chip" data-txt="Find items under ₹5">Find items under ₹5</button>
+      <button class="hint-chip" data-txt="What should I buy?">What should I buy?</button>
+      <button class="hint-chip" data-txt="Buy a dozen eggs">Buy a dozen eggs</button>
+      <button class="hint-chip" data-txt="Add 1 loaf of whole wheat bread">Add 1 loaf of whole wheat bread</button>
+    </div>
+
+    <p style="margin-top:12px; color:#64748b; font-size:13px">Open this page through a local HTTP server (recommended). Example:</p>
+    <pre style="background:#eef2ff;color:#0f172a">python -m http.server 8000
+Open: http://localhost:8000/nlp_test.html</pre>
+  </div>
+
+  <script type="module" src="js/nlp_test.js"></script>
+</body>
+</html>

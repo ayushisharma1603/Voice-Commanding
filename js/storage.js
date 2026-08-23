@@ -141,9 +141,9 @@ export class StorageManager {
     static getSettings() {
         try {
             const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-            return data ? JSON.parse(data) : { language: 'en-US', voiceFeedback: true, voiceSpeed: 1, theme: 'light', geminiApiKey: '' };
+            return data ? JSON.parse(data) : { language: 'en-US', voiceFeedback: true, voiceSpeed: 1, theme: 'light' };
         } catch (e) {
-            return { language: 'en-US', voiceFeedback: true, voiceSpeed: 1, theme: 'light', geminiApiKey: '' };
+            return { language: 'en-US', voiceFeedback: true, voiceSpeed: 1, theme: 'light' };
         }
     }
 

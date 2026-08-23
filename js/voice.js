@@ -25,9 +25,13 @@ export class VoiceManager {
      */
     initRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            console.warn('SpeechRecognition API is not supported in this browser environment.');
-            return;
+            if (!SpeechRecognition) {
+                // Browser fallback notice per polish guide
+                if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+                    alert('Voice recognition is supported in Chrome.');
+                }
+                console.warn('SpeechRecognition API is not supported in this browser environment.');
+                return;
         }
 
         this.recognition = new SpeechRecognition();

@@ -79,6 +79,16 @@ class App {
         this.summaryTotalCount = document.getElementById('summaryTotalCount');
         this.summaryPendingCount = document.getElementById('summaryPendingCount');
         this.summaryTotalPrice = document.getElementById('summaryTotalPrice');
+        this.checkoutBtn = document.getElementById('checkoutBtn');
+        this.checkoutModal = document.getElementById('checkoutModal');
+        this.closeCheckoutModalBtn = document.getElementById('closeCheckoutModalBtn');
+        this.checkoutFormView = document.getElementById('checkoutFormView');
+        this.checkoutSuccessView = document.getElementById('checkoutSuccessView');
+        this.checkoutItems = document.getElementById('checkoutItems');
+        this.checkoutTotal = document.getElementById('checkoutTotal');
+        this.placeOrderBtn = document.getElementById('placeOrderBtn');
+        this.doneCheckoutBtn = document.getElementById('doneCheckoutBtn');
+        this.orderConfirmationText = document.getElementById('orderConfirmationText');
 
         // Modals
         this.addItemModal = document.getElementById('addItemModal');
@@ -95,7 +105,8 @@ class App {
         this.soundFxToggle = document.getElementById('soundFxToggle');
         this.voiceSpeedRange = document.getElementById('voiceSpeedRange');
         this.speedValueText = document.getElementById('speedValueText');
-        this.geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+        // Gemini API key removed from settings UI
+        this.geminiApiKeyInput = null;
         this.toastContainer = document.getElementById('toastContainer');
     }
 
@@ -163,12 +174,13 @@ class App {
             this.exportMenu.classList.add('hidden');
         });
 
-        // Search Input & Reset
-        this.searchInput.addEventListener('input', (e) => {
+        // Debounced Search Input & Reset
+        const handleSearchInput = (e) => {
             this.searchQuery = e.target.value.toLowerCase().trim();
             this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
             this.renderShoppingList();
-        });
+        };
+        this.searchInput.addEventListener('input', this.debounce(handleSearchInput, 220));
 
         this.clearSearchBtn.addEventListener('click', () => {
             this.searchInput.value = '';
@@ -288,7 +300,7 @@ class App {
             this.soundFxToggle.checked = this.soundEnabled;
             this.voiceSpeedRange.value = settings.voiceSpeed || 1.0;
             this.speedValueText.textContent = `${settings.voiceSpeed || 1.0}x`;
-            this.geminiApiKeyInput.value = settings.geminiApiKey || '';
+            // no-op: geminiApiKeyInput removed from UI
             this.settingsModal.classList.remove('hidden');
         });
 
@@ -303,7 +315,7 @@ class App {
             settings.voiceFeedback = this.voiceFeedbackToggle.checked;
             this.soundEnabled = this.soundFxToggle.checked;
             settings.voiceSpeed = parseFloat(this.voiceSpeedRange.value);
-            settings.geminiApiKey = this.geminiApiKeyInput.value.trim();
+            // geminiApiKey removed; ensure not stored
             StorageManager.saveSettings(settings);
             this.settingsModal.classList.add('hidden');
             this.showToast('Settings saved successfully');
@@ -314,6 +326,11 @@ class App {
             this.renderSuggestions();
             this.showToast('Refreshed smart recommendations');
         });
+
+        this.checkoutBtn.addEventListener('click', () => this.openCheckout());
+        this.closeCheckoutModalBtn.addEventListener('click', () => this.closeCheckout());
+        this.doneCheckoutBtn.addEventListener('click', () => this.closeCheckout());
+        this.placeOrderBtn.addEventListener('click', () => this.placeOrder());
     }
 
     /**
@@ -404,9 +421,9 @@ class App {
                     this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
 
                     if (this.maxPriceFilter !== null) {
-                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under $${this.maxPriceFilter.toFixed(2)}`;
+                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under ₹${this.maxPriceFilter.toFixed(2)}`;
                         this.activeFilterBanner.classList.remove('hidden');
-                        this.voiceManager.speak(`Filtered shopping list for items under ${this.maxPriceFilter} dollars.`);
+                        this.voiceManager.speak(`Filtered shopping list for items under ${this.maxPriceFilter} rupees.`);
                     } else {
                         this.voiceManager.speak(`Searching for ${this.searchQuery}`);
                     }
@@ -495,7 +512,7 @@ class App {
         let text = `🛒 VoiceCart AI - Shopping List (${new Date().toLocaleDateString()})\n\n`;
         this.items.forEach((item, idx) => {
             const check = item.completed ? '[x]' : '[ ]';
-            const priceStr = item.price ? ` ($${item.price.toFixed(2)})` : '';
+            const priceStr = item.price ? ` (₹${item.price.toFixed(2)})` : '';
             text += `${idx + 1}. ${check} ${item.name} - ${item.quantity} ${item.unit} [${item.category}]${priceStr}\n`;
         });
         navigator.clipboard.writeText(text);
@@ -524,6 +541,49 @@ class App {
         a.click();
         URL.revokeObjectURL(url);
         this.showToast('Downloaded Shopping_List.csv');
+    }
+
+    getCartTotal() {
+        return this.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+    }
+
+    openCheckout() {
+        this.checkoutItems.innerHTML = this.items.length > 0 ? this.items.map(item => `
+            <div class="flex items-center justify-between gap-3">
+                <span class="truncate">${item.quantity} ${item.unit} ${item.name}</span>
+                <span class="font-semibold">${item.price ? `₹${(item.price * item.quantity).toFixed(2)}` : 'Price N/A'}</span>
+            </div>
+        `).join('') : '<p class="text-center text-slate-500 py-4">Your shopping list is empty. Add items before placing an order.</p>';
+        this.checkoutTotal.textContent = `₹${this.getCartTotal().toFixed(2)}`;
+        this.checkoutFormView.classList.remove('hidden');
+        this.checkoutSuccessView.classList.add('hidden');
+        this.placeOrderBtn.disabled = this.items.length === 0;
+        this.placeOrderBtn.classList.toggle('opacity-50', this.items.length === 0);
+        this.placeOrderBtn.classList.toggle('cursor-not-allowed', this.items.length === 0);
+        this.checkoutModal.classList.remove('hidden');
+    }
+
+    placeOrder() {
+        if (this.items.length === 0) {
+            this.showToast('Add items before placing the order', 'warning');
+            return;
+        }
+
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'UPI';
+        const orderId = `VC-${Date.now().toString().slice(-6)}`;
+        const total = this.getCartTotal();
+
+        this.checkoutFormView.classList.add('hidden');
+        this.checkoutSuccessView.classList.remove('hidden');
+        this.orderConfirmationText.textContent = `Order ${orderId} confirmed via ${paymentMethod}. Total: ₹${total.toFixed(2)}.`;
+        this.items = [];
+        StorageManager.saveItems(this.items);
+        this.render();
+        this.showToast('Order placed successfully');
+    }
+
+    closeCheckout() {
+        this.checkoutModal.classList.add('hidden');
     }
 
     handleVoiceStateChange({ state, message }) {
@@ -572,6 +632,13 @@ class App {
         this.hudLangText.textContent = langMap[langCode] || langCode;
     }
 
+    debounce(fn, wait) {
+        let t = null;
+        return function (...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
     updateCategoryTabStyles() {
         document.querySelectorAll('.cat-tab').forEach(btn => {
             const cat = btn.getAttribute('data-category');
@@ -658,17 +725,17 @@ class App {
         const totalItemsCount = this.items.length;
         const completedCount = this.items.filter(i => i.completed).length;
         const pendingCount = totalItemsCount - completedCount;
-        const totalEstPrice = this.items.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
+        const totalEstPrice = this.getCartTotal();
         const completedPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
 
         this.dashTotalItems.textContent = `${totalItemsCount} Items`;
         this.dashCompletedPercent.textContent = `${completedPercent}%`;
         this.dashProgressBar.style.width = `${completedPercent}%`;
-        this.dashEstTotal.textContent = `$${totalEstPrice.toFixed(2)}`;
+        this.dashEstTotal.textContent = `₹${totalEstPrice.toFixed(2)}`;
 
         this.summaryTotalCount.textContent = totalItemsCount;
         this.summaryPendingCount.textContent = pendingCount;
-        this.summaryTotalPrice.textContent = `$${totalEstPrice.toFixed(2)}`;
+        this.summaryTotalPrice.textContent = `₹${totalEstPrice.toFixed(2)}`;
 
         if (window.lucide) lucide.createIcons();
     }
@@ -688,7 +755,7 @@ class App {
                         </div>
                         <div class="text-xs text-slate-400 mt-0.5 flex items-center space-x-2">
                             ${item.brand ? `<span class="font-medium text-slate-500">Brand: ${item.brand}</span><span>•</span>` : ''}
-                            <span class="font-medium text-slate-500">Price: ${item.price ? `$${item.price.toFixed(2)}` : 'N/A'}</span>
+                            <span class="font-medium text-slate-500">Price: ${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</span>
                         </div>
                     </div>
                 </div>
@@ -742,7 +809,7 @@ class App {
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-700 dark:text-emerald-300">🌿 In Season (${item.season})</span>
-                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">$${item.price.toFixed(2)}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">₹${item.price.toFixed(2)}</span>
                         </div>
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
@@ -810,16 +877,15 @@ class App {
     showToast(message, type = 'info') {
         const toast = document.createElement('div');
         const bg = type === 'error' ? 'bg-rose-600' : type === 'warning' ? 'bg-amber-600' : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900';
-        toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-xl ${bg} text-xs font-semibold flex items-center space-x-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+        toast.className = `vc-toast pointer-events-auto px-4 py-2.5 rounded-xl shadow-xl ${bg} text-xs font-semibold flex items-center space-x-2`;
         toast.innerHTML = `<span>${message}</span>`;
 
         this.toastContainer.appendChild(toast);
-        requestAnimationFrame(() => {
-            toast.classList.remove('translate-y-2', 'opacity-0');
-        });
+        // trigger show animation
+        requestAnimationFrame(() => toast.classList.add('show'));
 
         setTimeout(() => {
-            toast.classList.add('opacity-0', 'translate-y-2');
+            toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }

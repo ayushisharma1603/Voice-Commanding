@@ -74,17 +74,8 @@ export class NLPParser {
         }
 
         // Check if Gemini API Key is configured in settings
-        const settings = StorageManager.getSettings();
-        if (settings.geminiApiKey && settings.geminiApiKey.trim() !== '') {
-            try {
-                const geminiResult = await this.parseWithGemini(text, settings.geminiApiKey);
-                if (geminiResult && geminiResult.intent !== 'UNKNOWN') {
-                    return geminiResult;
-                }
-            } catch (err) {
-                console.warn('Gemini API parse failed, falling back to local NLP:', err);
-            }
-        }
+        // Gemini integration removed; use local parser only
+        // const settings = StorageManager.getSettings();
 
         // Fallback to local high-performance regex & keyword parser
         return this.parseLocal(text);
@@ -95,12 +86,13 @@ export class NLPParser {
      */
     static parseLocal(text) {
         // 1. Search / Price Filter Intent
-        if (this.hasKeyword(text, MULTILINGUAL_SYNONYMS.search) || text.includes('under $') || text.includes('under ') || text.includes('below ')) {
-            const priceMatch = text.match(/(?:under|below|less than|\$)\s*(\d+(?:\.\d+)?)\s*(?:dollars|\$)?/i);
+        // allow both $ and ₹ mentions, plus plain numeric caps
+        if (this.hasKeyword(text, MULTILINGUAL_SYNONYMS.search) || /under\s*[₹$]?\d+/i.test(text) || text.includes('under ') || text.includes('below ')) {
+            const priceMatch = text.match(/(?:under|below|less than|[₹\$])\s*(\d+(?:\.\d+)?)\s*(?:dollars|rs|rupees|₹|\$)?/i);
             const priceCap = priceMatch ? parseFloat(priceMatch[1]) : null;
 
             let query = text
-                .replace(/(?:find|search|look for|show me|under|below|less than|\$|\d+(?:\.\d+)?|dollars)/gi, '')
+                .replace(/(?:find|search|look for|show me|under|below|less than|[₹\$]|\d+(?:\.\d+)?|dollars|rs|rupees)/gi, '')
                 .replace(/\s+/g, ' ')
                 .trim();
 
@@ -196,7 +188,8 @@ export class NLPParser {
     }
 
     static extractPrice(text) {
-        const match = text.match(/(?:\$|for|at)\s*(\d+(?:\.\d+)?)\s*(?:dollars|\$)?/i);
+        // Match patterns like "₹400", "$4", "for 300 rupees", "at 3.50"
+        const match = text.match(/[₹\$]\s*(\d+(?:\.\d+)?)/) || text.match(/(?:for|at)\s*(\d+(?:\.\d+)?)\s*(?:dollars|rs|rupees)?/i);
         return match ? parseFloat(match[1]) : null;
     }
 
@@ -218,7 +211,7 @@ export class NLPParser {
         });
 
         cleaned = cleaned
-            .replace(/\b(?:i|my|the|a|an|some|to|on|list|from|please|for|me|shopping|under|dollars|\$|\d+(?:\.\d+)?|pcs|bottles?|gallons?|packs?|boxes?|loaf|loaves|kg|lbs|liters?|bags?|tubes?|cans?|cartons?)\b/gi, '')
+            .replace(/\b(?:i|my|the|a|an|some|to|on|list|from|please|for|me|shopping|under|dollars|rs|rupees|₹|\$|\d+(?:\.\d+)?|pcs|bottles?|gallons?|packs?|boxes?|loaf|loaves|kg|lbs|liters?|bags?|tubes?|cans?|cartons?)\b/gi, '')
             .replace(/\s+/g, ' ')
             .trim();
 
@@ -231,36 +224,7 @@ export class NLPParser {
     }
 
     static async parseWithGemini(text, apiKey) {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        const prompt = `You are a voice command shopping list assistant NLP parser.
-Analyze utterance: "${text}".
-Return ONLY valid JSON matching this schema:
-{
-  "intent": "ADD_ITEM" | "REMOVE_ITEM" | "SEARCH" | "SUGGESTIONS" | "TOGGLE_ITEM",
-  "item": {
-     "name": "Product Name",
-     "quantity": 1,
-     "unit": "pcs",
-     "category": "Produce/Dairy/Bakery/Pantry/Beverages/Snacks/Personal Care/Household/Meat & Seafood",
-     "price": 0.00 or null,
-     "brand": "Brand Name" or null
-  },
-  "query": "search query string or null",
-  "maxPrice": 0.00 or null
-}`;
-
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-
-        const data = await response.json();
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (responseText) {
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) return JSON.parse(jsonMatch[0]);
-        }
+        // Gemini remote parsing removed. Keep function stub in case of future reintegration.
         return null;
     }
 }
