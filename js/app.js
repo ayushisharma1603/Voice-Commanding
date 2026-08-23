@@ -16,6 +16,7 @@ class App {
         this.searchQuery = '';
         this.maxPriceFilter = null;
         this.soundEnabled = true;
+        this.budgetLimit = parseFloat(localStorage.getItem('vcs_budget_limit')) || null;
         this.voiceManager = null;
 
         this.initDOM();
@@ -24,13 +25,9 @@ class App {
         this.render();
     }
 
-    /**
-     * Cache DOM Elements
-     */
     initDOM() {
         this.micBtn = document.getElementById('micBtn');
         this.micIcon = document.getElementById('micIcon');
-        this.micSubtext = document.getElementById('micSubtext');
         this.voiceStatusDot = document.getElementById('voiceStatusDot');
         this.voiceStatusText = document.getElementById('voiceStatusText');
         this.audioWaveform = document.getElementById('audioWaveform');
@@ -40,6 +37,14 @@ class App {
         this.languageSelect = document.getElementById('languageSelect');
         this.themeToggleBtn = document.getElementById('themeToggleBtn');
         this.themeIcon = document.getElementById('themeIcon');
+        this.headerSoundBtn = document.getElementById('headerSoundBtn');
+        this.soundIcon = document.getElementById('soundIcon');
+        this.headerHelpBtn = document.getElementById('headerHelpBtn');
+        this.headerRecipeBtn = document.getElementById('headerRecipeBtn');
+
+        this.voiceAudioToggleBtn = document.getElementById('voiceAudioToggleBtn');
+        this.voiceAudioStatusText = document.getElementById('voiceAudioStatusText');
+
         this.toggleVoiceHudBtn = document.getElementById('toggleVoiceHudBtn');
         this.voiceHudOverlay = document.getElementById('voiceHudOverlay');
         this.exitVoiceHudBtn = document.getElementById('exitVoiceHudBtn');
@@ -47,17 +52,17 @@ class App {
         this.hudTranscriptBox = document.getElementById('hudTranscriptBox');
         this.hudLangText = document.getElementById('hudLangText');
 
-        // Export Menu
         this.exportDropdownBtn = document.getElementById('exportDropdownBtn');
         this.exportMenu = document.getElementById('exportMenu');
         this.copyListBtn = document.getElementById('copyListBtn');
         this.downloadCsvBtn = document.getElementById('downloadCsvBtn');
 
-        // Dashboard Stats
-        this.dashTotalItems = document.getElementById('dashTotalItems');
-        this.dashCompletedPercent = document.getElementById('dashCompletedPercent');
-        this.dashProgressBar = document.getElementById('dashProgressBar');
         this.dashEstTotal = document.getElementById('dashEstTotal');
+        this.setBudgetBtn = document.getElementById('setBudgetBtn');
+        this.budgetProgressContainer = document.getElementById('budgetProgressContainer');
+        this.budgetLimitText = document.getElementById('budgetLimitText');
+        this.budgetRemainingText = document.getElementById('budgetRemainingText');
+        this.dashProgressBar = document.getElementById('dashProgressBar');
 
         this.suggestionsContainer = document.getElementById('suggestionsContainer');
         this.seasonBadge = document.getElementById('seasonBadge');
@@ -75,20 +80,7 @@ class App {
         this.itemCountBadge = document.getElementById('itemCountBadge');
         this.clearCompletedBtn = document.getElementById('clearCompletedBtn');
         this.clearAllBtn = document.getElementById('clearAllBtn');
-
-        this.summaryTotalCount = document.getElementById('summaryTotalCount');
-        this.summaryPendingCount = document.getElementById('summaryPendingCount');
-        this.summaryTotalPrice = document.getElementById('summaryTotalPrice');
-        this.checkoutBtn = document.getElementById('checkoutBtn');
-        this.checkoutModal = document.getElementById('checkoutModal');
-        this.closeCheckoutModalBtn = document.getElementById('closeCheckoutModalBtn');
-        this.checkoutFormView = document.getElementById('checkoutFormView');
-        this.checkoutSuccessView = document.getElementById('checkoutSuccessView');
-        this.checkoutItems = document.getElementById('checkoutItems');
-        this.checkoutTotal = document.getElementById('checkoutTotal');
-        this.placeOrderBtn = document.getElementById('placeOrderBtn');
-        this.doneCheckoutBtn = document.getElementById('doneCheckoutBtn');
-        this.orderConfirmationText = document.getElementById('orderConfirmationText');
+        this.emptyCartVoiceBtn = document.getElementById('emptyCartVoiceBtn');
 
         // Modals
         this.addItemModal = document.getElementById('addItemModal');
@@ -97,22 +89,22 @@ class App {
         this.cancelAddItemModalBtn = document.getElementById('cancelAddItemModalBtn');
         this.manualAddForm = document.getElementById('manualAddForm');
 
+        this.setBudgetModal = document.getElementById('setBudgetModal');
+        this.closeBudgetModalBtn = document.getElementById('closeBudgetModalBtn');
+        this.saveBudgetBtn = document.getElementById('saveBudgetBtn');
+        this.clearBudgetBtn = document.getElementById('clearBudgetBtn');
+        this.budgetAmountInput = document.getElementById('budgetAmountInput');
+
         this.settingsModal = document.getElementById('settingsModal');
         this.openSettingsBtn = document.getElementById('openSettingsBtn');
         this.closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
         this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
         this.voiceFeedbackToggle = document.getElementById('voiceFeedbackToggle');
         this.soundFxToggle = document.getElementById('soundFxToggle');
-        this.voiceSpeedRange = document.getElementById('voiceSpeedRange');
-        this.speedValueText = document.getElementById('speedValueText');
-        // Gemini API key removed from settings UI
-        this.geminiApiKeyInput = null;
+        this.geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
         this.toastContainer = document.getElementById('toastContainer');
     }
 
-    /**
-     * Initialize Voice Recognition engine
-     */
     initVoice() {
         this.voiceManager = new VoiceManager(
             (result) => this.handleSpeechResult(result),
@@ -130,11 +122,7 @@ class App {
         }
     }
 
-    /**
-     * Attach UI Event Listeners
-     */
     initEventListeners() {
-        // Mic Button Click
         const triggerMic = () => {
             if (this.soundEnabled) SoundFX.playMicStart();
             this.voiceManager.startListening();
@@ -151,6 +139,42 @@ class App {
             StorageManager.saveSettings(settings);
             this.updateHudLangText(lang);
             this.showToast(`Language set to ${e.target.options[e.target.selectedIndex].text}`);
+        });
+
+        // Header Sound FX Toggle
+        this.headerSoundBtn.addEventListener('click', () => {
+            this.soundEnabled = !this.soundEnabled;
+            this.soundIcon.setAttribute('data-lucide', this.soundEnabled ? 'volume-2' : 'volume-x');
+            this.soundFxToggle.checked = this.soundEnabled;
+            if (window.lucide) lucide.createIcons();
+            this.showToast(this.soundEnabled ? 'Sound FX Enabled' : 'Sound FX Muted');
+        });
+
+        // Header Voice Audio Spoken Feedback Toggle
+        this.voiceAudioToggleBtn.addEventListener('click', () => {
+            const settings = StorageManager.getSettings();
+            settings.voiceFeedback = !settings.voiceFeedback;
+            StorageManager.saveSettings(settings);
+            this.voiceFeedbackToggle.checked = settings.voiceFeedback;
+            this.voiceAudioStatusText.textContent = settings.voiceFeedback ? 'Voice Audio On' : 'Voice Audio Off';
+            this.showToast(settings.voiceFeedback ? 'Voice Audio Feedback Enabled' : 'Voice Audio Muted');
+        });
+
+        // Header Recipe Button
+        this.headerRecipeBtn.addEventListener('click', () => {
+            const recipeKey = 'pancake';
+            const items = RECIPE_BUNDLES[recipeKey];
+            if (items) {
+                items.forEach(item => this.addItem(item, false));
+                if (this.soundEnabled) SoundFX.playItemAdd();
+                this.showToast('Added Pancake Recipe bundle to cart!');
+                this.voiceManager.speak('Added pancake recipe ingredients to your cart.');
+            }
+        });
+
+        // Header Help Button
+        this.headerHelpBtn.addEventListener('click', () => {
+            alert("🎤 Voice Commands Guide:\n\n• Say 'Add 2 litres of milk'\n• Say 'A dozen eggs'\n• Say 'Remove bread'\n• Say 'Find items under $5'\n• Say 'Empty my cart'");
         });
 
         // Export Dropdown
@@ -174,13 +198,12 @@ class App {
             this.exportMenu.classList.add('hidden');
         });
 
-        // Debounced Search Input & Reset
-        const handleSearchInput = (e) => {
+        // Search Input & Reset
+        this.searchInput.addEventListener('input', (e) => {
             this.searchQuery = e.target.value.toLowerCase().trim();
             this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
             this.renderShoppingList();
-        };
-        this.searchInput.addEventListener('input', this.debounce(handleSearchInput, 220));
+        });
 
         this.clearSearchBtn.addEventListener('click', () => {
             this.searchInput.value = '';
@@ -209,30 +232,43 @@ class App {
             this.renderShoppingList();
         });
 
-        // Quick Hint Chips
+        // Hint Chips Click
         document.querySelectorAll('.hint-chip').forEach(chip => {
             chip.addEventListener('click', () => {
-                const text = chip.textContent.replace(/"/g, '');
+                const text = chip.textContent.replace(/"/g, '').trim();
                 this.processUtterance(text);
             });
         });
 
-        // Recipe Bundle Buttons
-        document.querySelectorAll('.recipe-bundle-btn').forEach(btn => {
+        // Quick Add Empty State Pills
+        document.querySelectorAll('.quick-add-pill').forEach(btn => {
             btn.addEventListener('click', () => {
-                const recipeKey = btn.getAttribute('data-recipe');
-                const items = RECIPE_BUNDLES[recipeKey];
-                if (items) {
-                    items.forEach(item => this.addItem(item, false));
-                    if (this.soundEnabled) SoundFX.playItemAdd();
-                    const recipeName = recipeKey.charAt(0).toUpperCase() + recipeKey.slice(1);
-                    this.showToast(`Added ${recipeName} recipe ingredients to list!`);
-                    this.voiceManager.speak(`Added ingredients for ${recipeName} to your list.`);
-                }
+                const name = btn.getAttribute('data-item');
+                const category = btn.getAttribute('data-category');
+                const price = parseFloat(btn.getAttribute('data-price')) || null;
+
+                this.addItem({ name, quantity: 1, category, price });
+                if (this.soundEnabled) SoundFX.playItemAdd();
+                this.showToast(`Added ${name} to cart`);
+                this.voiceManager.speak(`Added ${name} to your cart.`);
             });
         });
 
-        // Clear buttons
+        // Empty Cart Buttons
+        const emptyCartAction = () => {
+            if (this.items.length === 0) return;
+            if (confirm('Are you sure you want to empty your shopping cart?')) {
+                this.items = [];
+                StorageManager.saveItems(this.items);
+                this.render();
+                if (this.soundEnabled) SoundFX.playDelete();
+                this.showToast('Cart emptied');
+                this.voiceManager.speak('Emptied your cart.');
+            }
+        };
+        this.clearAllBtn.addEventListener('click', emptyCartAction);
+        if (this.emptyCartVoiceBtn) this.emptyCartVoiceBtn.addEventListener('click', emptyCartAction);
+
         this.clearCompletedBtn.addEventListener('click', () => {
             this.items = this.items.filter(i => !i.completed);
             StorageManager.saveItems(this.items);
@@ -241,14 +277,30 @@ class App {
             this.showToast('Cleared completed items');
         });
 
-        this.clearAllBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all items from your shopping list?')) {
-                this.items = [];
-                StorageManager.saveItems(this.items);
-                this.render();
-                if (this.soundEnabled) SoundFX.playDelete();
-                this.showToast('Shopping list cleared');
+        // Set Budget Modal
+        this.setBudgetBtn.addEventListener('click', () => {
+            this.budgetAmountInput.value = this.budgetLimit || '';
+            this.setBudgetModal.classList.remove('hidden');
+        });
+        this.closeBudgetModalBtn.addEventListener('click', () => this.setBudgetModal.classList.add('hidden'));
+
+        this.saveBudgetBtn.addEventListener('click', () => {
+            const val = parseFloat(this.budgetAmountInput.value);
+            if (!isNaN(val) && val > 0) {
+                this.budgetLimit = val;
+                localStorage.setItem('vcs_budget_limit', val.toString());
+                this.setBudgetModal.classList.add('hidden');
+                this.renderShoppingList();
+                this.showToast(`Budget set to $${val.toFixed(2)}`);
             }
+        });
+
+        this.clearBudgetBtn.addEventListener('click', () => {
+            this.budgetLimit = null;
+            localStorage.removeItem('vcs_budget_limit');
+            this.setBudgetModal.classList.add('hidden');
+            this.renderShoppingList();
+            this.showToast('Cleared budget limit');
         });
 
         // Theme Toggle
@@ -281,15 +333,14 @@ class App {
             const unit = document.getElementById('manualUnitSelect').value;
             const category = document.getElementById('manualCategorySelect').value;
             const price = parseFloat(document.getElementById('manualPriceInput').value) || null;
-            const brand = document.getElementById('manualBrandInput').value.trim() || null;
 
             if (name) {
-                this.addItem({ name, quantity, unit, category, price, brand });
+                this.addItem({ name, quantity, unit, category, price });
                 this.manualAddForm.reset();
                 this.addItemModal.classList.add('hidden');
                 if (this.soundEnabled) SoundFX.playItemAdd();
-                this.showToast(`Added ${name} to list`);
-                this.voiceManager.speak(`Added ${quantity} ${unit} of ${name} to your shopping list.`);
+                this.showToast(`Added ${name} to cart`);
+                this.voiceManager.speak(`Added ${quantity} ${unit} of ${name} to your cart.`);
             }
         });
 
@@ -298,44 +349,29 @@ class App {
             const settings = StorageManager.getSettings();
             this.voiceFeedbackToggle.checked = settings.voiceFeedback;
             this.soundFxToggle.checked = this.soundEnabled;
-            this.voiceSpeedRange.value = settings.voiceSpeed || 1.0;
-            this.speedValueText.textContent = `${settings.voiceSpeed || 1.0}x`;
-            // no-op: geminiApiKeyInput removed from UI
+            this.geminiApiKeyInput.value = settings.geminiApiKey || '';
             this.settingsModal.classList.remove('hidden');
         });
 
         this.closeSettingsModalBtn.addEventListener('click', () => this.settingsModal.classList.add('hidden'));
 
-        this.voiceSpeedRange.addEventListener('input', (e) => {
-            this.speedValueText.textContent = `${e.target.value}x`;
-        });
-
         this.saveSettingsBtn.addEventListener('click', () => {
             const settings = StorageManager.getSettings();
             settings.voiceFeedback = this.voiceFeedbackToggle.checked;
             this.soundEnabled = this.soundFxToggle.checked;
-            settings.voiceSpeed = parseFloat(this.voiceSpeedRange.value);
-            // geminiApiKey removed; ensure not stored
+            settings.geminiApiKey = this.geminiApiKeyInput.value.trim();
             StorageManager.saveSettings(settings);
             this.settingsModal.classList.add('hidden');
-            this.showToast('Settings saved successfully');
+            this.showToast('Settings saved');
         });
 
         // Refresh Suggestions
         this.refreshSuggestionsBtn.addEventListener('click', () => {
             this.renderSuggestions();
-            this.showToast('Refreshed smart recommendations');
+            this.showToast('Refreshed recommendations');
         });
-
-        this.checkoutBtn.addEventListener('click', () => this.openCheckout());
-        this.closeCheckoutModalBtn.addEventListener('click', () => this.closeCheckout());
-        this.doneCheckoutBtn.addEventListener('click', () => this.closeCheckout());
-        this.placeOrderBtn.addEventListener('click', () => this.placeOrder());
     }
 
-    /**
-     * Handle incoming raw speech recognition transcript
-     */
     async handleSpeechResult(result) {
         if (result.interim) {
             this.transcriptText.textContent = `"${result.interim}"`;
@@ -350,11 +386,20 @@ class App {
         }
     }
 
-    /**
-     * Process speech utterance through NLP Parser
-     */
     async processUtterance(utteranceText) {
         this.setVoiceStatus('thinking', 'Processing command...');
+
+        // Check for empty cart command
+        if (utteranceText.toLowerCase().includes('empty my cart') || utteranceText.toLowerCase().includes('clear my cart')) {
+            this.items = [];
+            StorageManager.saveItems(this.items);
+            this.render();
+            if (this.soundEnabled) SoundFX.playDelete();
+            this.voiceManager.speak('Emptied your shopping cart.');
+            this.showToast('Emptied shopping cart');
+            this.setVoiceStatus('idle', 'Tap mic to speak');
+            return;
+        }
         
         try {
             const action = await NLPParser.parse(utteranceText);
@@ -370,7 +415,7 @@ class App {
                     if (action.item && action.item.name) {
                         this.addItem(action.item);
                         if (this.soundEnabled) SoundFX.playItemAdd();
-                        const msg = `Added ${action.item.quantity} ${action.item.name} to your list.`;
+                        const msg = `Added ${action.item.quantity} ${action.item.name} to your cart.`;
                         this.voiceManager.speak(msg);
                         this.showToast(msg);
                     }
@@ -380,7 +425,7 @@ class App {
                     if (action.items) {
                         action.items.forEach(i => this.addItem(i, false));
                         if (this.soundEnabled) SoundFX.playItemAdd();
-                        const msg = `Added ${action.recipeName} ingredients to your shopping list.`;
+                        const msg = `Added ${action.recipeName} ingredients to your cart.`;
                         this.voiceManager.speak(msg);
                         this.showToast(msg);
                     }
@@ -391,11 +436,11 @@ class App {
                         const removed = this.removeItemByName(action.item);
                         if (removed) {
                             if (this.soundEnabled) SoundFX.playDelete();
-                            const msg = `Removed ${action.item} from your shopping list.`;
+                            const msg = `Removed ${action.item} from your cart.`;
                             this.voiceManager.speak(msg);
                             this.showToast(msg);
                         } else {
-                            const msg = `Could not find ${action.item} on your list.`;
+                            const msg = `Could not find ${action.item} in your cart.`;
                             this.voiceManager.speak(msg);
                             this.showToast(msg, 'warning');
                         }
@@ -421,9 +466,9 @@ class App {
                     this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
 
                     if (this.maxPriceFilter !== null) {
-                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under ₹${this.maxPriceFilter.toFixed(2)}`;
+                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under $${this.maxPriceFilter.toFixed(2)}`;
                         this.activeFilterBanner.classList.remove('hidden');
-                        this.voiceManager.speak(`Filtered shopping list for items under ${this.maxPriceFilter} rupees.`);
+                        this.voiceManager.speak(`Filtered cart for items under ${this.maxPriceFilter} dollars.`);
                     } else {
                         this.voiceManager.speak(`Searching for ${this.searchQuery}`);
                     }
@@ -432,7 +477,7 @@ class App {
 
                 case 'SUGGESTIONS':
                     this.renderSuggestions();
-                    this.voiceManager.speak(`Here are smart recommendations based on your history and seasonal favorites.`);
+                    this.voiceManager.speak(`Here are smart recommendations.`);
                     this.showToast('Generated smart recommendations');
                     break;
             }
@@ -440,13 +485,10 @@ class App {
             console.error('Error executing voice command:', err);
             this.showToast('Error processing voice command', 'error');
         } finally {
-            this.setVoiceStatus('idle', 'Tap mic or say command');
+            this.setVoiceStatus('idle', 'Tap mic to speak');
         }
     }
 
-    /**
-     * Add item to list & update storage
-     */
     addItem(itemData, updateRender = true) {
         const existingIndex = this.items.findIndex(i => i.name.toLowerCase() === itemData.name.toLowerCase());
 
@@ -461,7 +503,6 @@ class App {
                 unit: itemData.unit || 'pcs',
                 category: itemData.category || StorageManager.detectCategory(itemData.name),
                 price: itemData.price || null,
-                brand: itemData.brand || null,
                 completed: false,
                 createdAt: Date.now()
             };
@@ -473,9 +514,6 @@ class App {
         if (updateRender) this.render();
     }
 
-    /**
-     * Remove item by name
-     */
     removeItemByName(name) {
         const initialLength = this.items.length;
         this.items = this.items.filter(i => !i.name.toLowerCase().includes(name.toLowerCase()));
@@ -487,9 +525,6 @@ class App {
         return false;
     }
 
-    /**
-     * Toggle completion status by item name
-     */
     toggleItemByName(name) {
         const item = this.items.find(i => i.name.toLowerCase().includes(name.toLowerCase()));
         if (item) {
@@ -501,89 +536,40 @@ class App {
         return false;
     }
 
-    /**
-     * Export Shopping List as Text
-     */
     exportAsText() {
         if (this.items.length === 0) {
-            this.showToast('Shopping list is empty', 'warning');
+            this.showToast('Cart is empty', 'warning');
             return;
         }
-        let text = `🛒 VoiceCart AI - Shopping List (${new Date().toLocaleDateString()})\n\n`;
+        let text = `🛒 VoiceCart - Shopping Cart List (${new Date().toLocaleDateString()})\n\n`;
         this.items.forEach((item, idx) => {
             const check = item.completed ? '[x]' : '[ ]';
-            const priceStr = item.price ? ` (₹${item.price.toFixed(2)})` : '';
+            const priceStr = item.price ? ` ($${item.price.toFixed(2)})` : '';
             text += `${idx + 1}. ${check} ${item.name} - ${item.quantity} ${item.unit} [${item.category}]${priceStr}\n`;
         });
         navigator.clipboard.writeText(text);
-        this.showToast('Shopping list copied to clipboard!');
+        this.showToast('Cart copied to clipboard!');
     }
 
-    /**
-     * Export Shopping List as CSV
-     */
     exportAsCSV() {
         if (this.items.length === 0) {
-            this.showToast('Shopping list is empty', 'warning');
+            this.showToast('Cart is empty', 'warning');
             return;
         }
-        let csv = 'Status,Name,Quantity,Unit,Category,Price,Brand\n';
+        let csv = 'Status,Name,Quantity,Unit,Category,Price\n';
         this.items.forEach(i => {
             const status = i.completed ? 'Completed' : 'Pending';
-            csv += `"${status}","${i.name}",${i.quantity},"${i.unit}","${i.category}",${i.price || 0},"${i.brand || ''}"\n`;
+            csv += `"${status}","${i.name}",${i.quantity},"${i.unit}","${i.category}",${i.price || 0}\n`;
         });
 
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Shopping_List_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.download = `VoiceCart_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.showToast('Downloaded Shopping_List.csv');
-    }
-
-    getCartTotal() {
-        return this.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
-    }
-
-    openCheckout() {
-        this.checkoutItems.innerHTML = this.items.length > 0 ? this.items.map(item => `
-            <div class="flex items-center justify-between gap-3">
-                <span class="truncate">${item.quantity} ${item.unit} ${item.name}</span>
-                <span class="font-semibold">${item.price ? `₹${(item.price * item.quantity).toFixed(2)}` : 'Price N/A'}</span>
-            </div>
-        `).join('') : '<p class="text-center text-slate-500 py-4">Your shopping list is empty. Add items before placing an order.</p>';
-        this.checkoutTotal.textContent = `₹${this.getCartTotal().toFixed(2)}`;
-        this.checkoutFormView.classList.remove('hidden');
-        this.checkoutSuccessView.classList.add('hidden');
-        this.placeOrderBtn.disabled = this.items.length === 0;
-        this.placeOrderBtn.classList.toggle('opacity-50', this.items.length === 0);
-        this.placeOrderBtn.classList.toggle('cursor-not-allowed', this.items.length === 0);
-        this.checkoutModal.classList.remove('hidden');
-    }
-
-    placeOrder() {
-        if (this.items.length === 0) {
-            this.showToast('Add items before placing the order', 'warning');
-            return;
-        }
-
-        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'UPI';
-        const orderId = `VC-${Date.now().toString().slice(-6)}`;
-        const total = this.getCartTotal();
-
-        this.checkoutFormView.classList.add('hidden');
-        this.checkoutSuccessView.classList.remove('hidden');
-        this.orderConfirmationText.textContent = `Order ${orderId} confirmed via ${paymentMethod}. Total: ₹${total.toFixed(2)}.`;
-        this.items = [];
-        StorageManager.saveItems(this.items);
-        this.render();
-        this.showToast('Order placed successfully');
-    }
-
-    closeCheckout() {
-        this.checkoutModal.classList.add('hidden');
+        this.showToast('Downloaded VoiceCart.csv');
     }
 
     handleVoiceStateChange({ state, message }) {
@@ -598,25 +584,21 @@ class App {
             this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
-            this.micSubtext.textContent = 'LISTENING...';
         } else if (state === 'speaking') {
             this.micBtn.classList.remove('mic-active');
             this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
             this.audioWaveform.classList.remove('hidden');
             this.audioWaveform.classList.add('flex');
-            this.micSubtext.textContent = 'SPEAKING';
         } else if (state === 'thinking') {
             this.micBtn.classList.remove('mic-active');
             this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-spin';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
-            this.micSubtext.textContent = 'PARSING...';
         } else {
             this.micBtn.classList.remove('mic-active');
-            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse';
+            this.voiceStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
             this.audioWaveform.classList.add('hidden');
             this.audioWaveform.classList.remove('flex');
-            this.micSubtext.textContent = 'TAP TO SPEAK';
         }
     }
 
@@ -632,20 +614,13 @@ class App {
         this.hudLangText.textContent = langMap[langCode] || langCode;
     }
 
-    debounce(fn, wait) {
-        let t = null;
-        return function (...args) {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), wait);
-        };
-    }
     updateCategoryTabStyles() {
         document.querySelectorAll('.cat-tab').forEach(btn => {
             const cat = btn.getAttribute('data-category');
             if (cat === this.activeCategory) {
-                btn.className = 'cat-tab bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg font-medium whitespace-nowrap shadow-sm';
+                btn.className = 'cat-tab bg-emerald-600 text-white px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap shadow-xs';
             } else {
-                btn.className = 'cat-tab bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3.5 py-1.5 rounded-lg font-medium hover:bg-slate-200 whitespace-nowrap';
+                btn.className = 'cat-tab bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3.5 py-1.5 rounded-full font-medium hover:bg-slate-200 whitespace-nowrap';
             }
         });
     }
@@ -659,8 +634,7 @@ class App {
 
         if (this.searchQuery) {
             filtered = filtered.filter(i =>
-                i.name.toLowerCase().includes(this.searchQuery) ||
-                (i.brand && i.brand.toLowerCase().includes(this.searchQuery))
+                i.name.toLowerCase().includes(this.searchQuery)
             );
         }
 
@@ -717,25 +691,31 @@ class App {
                 if (this.soundEnabled) SoundFX.playDelete();
                 StorageManager.saveItems(this.items);
                 this.render();
-                this.showToast('Item deleted');
+                this.showToast('Item removed');
             });
         });
 
-        // Summary Calculations & Dashboard Update
-        const totalItemsCount = this.items.length;
-        const completedCount = this.items.filter(i => i.completed).length;
-        const pendingCount = totalItemsCount - completedCount;
-        const totalEstPrice = this.getCartTotal();
-        const completedPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
+        // Total calculations & budget meter
+        const totalEstPrice = this.items.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
+        this.dashEstTotal.textContent = `$${totalEstPrice.toFixed(2)}`;
 
-        this.dashTotalItems.textContent = `${totalItemsCount} Items`;
-        this.dashCompletedPercent.textContent = `${completedPercent}%`;
-        this.dashProgressBar.style.width = `${completedPercent}%`;
-        this.dashEstTotal.textContent = `₹${totalEstPrice.toFixed(2)}`;
-
-        this.summaryTotalCount.textContent = totalItemsCount;
-        this.summaryPendingCount.textContent = pendingCount;
-        this.summaryTotalPrice.textContent = `₹${totalEstPrice.toFixed(2)}`;
+        if (this.budgetLimit) {
+            this.budgetProgressContainer.classList.remove('hidden');
+            this.budgetLimitText.textContent = `$${this.budgetLimit.toFixed(2)}`;
+            const remaining = this.budgetLimit - totalEstPrice;
+            if (remaining >= 0) {
+                this.budgetRemainingText.textContent = `$${remaining.toFixed(2)} remaining`;
+                this.budgetRemainingText.className = 'text-emerald-600 font-semibold';
+            } else {
+                this.budgetRemainingText.textContent = `$${Math.abs(remaining).toFixed(2)} over budget!`;
+                this.budgetRemainingText.className = 'text-rose-500 font-bold';
+            }
+            const pct = Math.min(100, Math.round((totalEstPrice / this.budgetLimit) * 100));
+            this.dashProgressBar.style.width = `${pct}%`;
+            this.dashProgressBar.className = pct > 100 ? 'bg-rose-500 h-full transition-all' : 'bg-emerald-500 h-full transition-all';
+        } else {
+            this.budgetProgressContainer.classList.add('hidden');
+        }
 
         if (window.lucide) lucide.createIcons();
     }
@@ -745,23 +725,22 @@ class App {
         const isDoneClass = item.completed ? 'item-completed' : '';
 
         return `
-            <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3 ${isDoneClass} hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-xs">
+            <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-4 flex items-center justify-between gap-3 ${isDoneClass} border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-xs">
                 <div class="flex items-center space-x-3.5 min-w-0">
-                    <input type="checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''} class="item-checkbox w-5 h-5 text-indigo-600 rounded cursor-pointer accent-indigo-600">
+                    <input type="checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''} class="item-checkbox w-5 h-5 text-emerald-600 rounded cursor-pointer accent-emerald-600">
                     <div class="min-w-0">
                         <div class="flex items-center space-x-2">
-                            <span class="item-title font-semibold text-sm truncate">${item.name}</span>
-                            <span class="text-xs px-2.5 py-0.5 rounded-full font-medium ${categoryBadgeClass}">${item.category}</span>
+                            <span class="item-title font-semibold text-sm truncate text-slate-900 dark:text-white">${item.name}</span>
+                            <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium ${categoryBadgeClass}">${item.category}</span>
                         </div>
-                        <div class="text-xs text-slate-400 mt-0.5 flex items-center space-x-2">
-                            ${item.brand ? `<span class="font-medium text-slate-500">Brand: ${item.brand}</span><span>•</span>` : ''}
-                            <span class="font-medium text-slate-500">Price: ${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</span>
+                        <div class="text-xs text-slate-400 mt-0.5">
+                            Price: <span class="font-semibold text-slate-600 dark:text-slate-300">${item.price ? `$${item.price.toFixed(2)}` : 'N/A'}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl px-2.5 py-1 border border-slate-200/60 dark:border-slate-700/60">
+                    <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-700/80 rounded-xl px-2.5 py-1 border border-slate-200/60 dark:border-slate-600/60">
                         <button data-id="${item.id}" class="qty-minus-btn text-slate-500 hover:text-slate-900 dark:hover:text-white p-0.5">
                             <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                         </button>
@@ -797,7 +776,7 @@ class App {
                     </div>
                     <button data-name="${item.name}" data-category="${item.category}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium flex items-center justify-center space-x-1 shadow-xs">
                         <i data-lucide="plus" class="w-3 h-3"></i>
-                        <span>Add to List</span>
+                        <span>Add to Cart</span>
                     </button>
                 </div>
             `;
@@ -809,14 +788,14 @@ class App {
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-700 dark:text-emerald-300">🌿 In Season (${item.season})</span>
-                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">₹${item.price.toFixed(2)}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">$${item.price.toFixed(2)}</span>
                         </div>
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
                     </div>
                     <button data-name="${item.name}" data-category="${item.category}" data-price="${item.price}" class="add-suggestion-btn w-full mt-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center space-x-1 shadow-xs">
                         <i data-lucide="plus" class="w-3 h-3"></i>
-                        <span>Add to List</span>
+                        <span>Add to Cart</span>
                     </button>
                 </div>
             `;
@@ -851,8 +830,8 @@ class App {
 
                 this.addItem({ name, quantity: 1, category, price });
                 if (this.soundEnabled) SoundFX.playItemAdd();
-                this.showToast(`Added ${name} from suggestions`);
-                this.voiceManager.speak(`Added ${name} to your list.`);
+                this.showToast(`Added ${name} to cart`);
+                this.voiceManager.speak(`Added ${name} to your cart.`);
             });
         });
 
@@ -877,15 +856,16 @@ class App {
     showToast(message, type = 'info') {
         const toast = document.createElement('div');
         const bg = type === 'error' ? 'bg-rose-600' : type === 'warning' ? 'bg-amber-600' : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900';
-        toast.className = `vc-toast pointer-events-auto px-4 py-2.5 rounded-xl shadow-xl ${bg} text-xs font-semibold flex items-center space-x-2`;
+        toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-xl ${bg} text-xs font-semibold flex items-center space-x-2 transition-all duration-300 transform translate-y-2 opacity-0`;
         toast.innerHTML = `<span>${message}</span>`;
 
         this.toastContainer.appendChild(toast);
-        // trigger show animation
-        requestAnimationFrame(() => toast.classList.add('show'));
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-2', 'opacity-0');
+        });
 
         setTimeout(() => {
-            toast.classList.remove('show');
+            toast.classList.add('opacity-0', 'translate-y-2');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
