@@ -4,15 +4,15 @@
 
 ---
 
-## 🌐 Live Application & Submission Links
+## 🌐 Application & Submission Links
 - **GitHub Repository**: [https://github.com/ayushisharma1603/Voice-Commanding](https://github.com/ayushisharma1603/Voice-Commanding)
-- **Working Application Live URL**: [https://ayushisharma1603.github.io/Voice-Commanding/](https://ayushisharma1603.github.io/Voice-Commanding/)
+- **GitHub Pages Application URL**: [https://ayushisharma1603.github.io/Voice-Commanding/](https://ayushisharma1603.github.io/Voice-Commanding/)
 
 ---
 
 ## 📝 Approach Write-Up (Technical Summary - 142 Words)
 
-VoiceCart AI is built as a zero-dependency, high-performance web application designed for fast, accessible, and intuitive voice-based shopping list management. It leverages the browser's native Web Speech API for real-time speech recognition and text-to-speech feedback, providing zero latency and no server overhead. Commands are parsed using a smart hybrid Natural Language Processing (NLP) pipeline combining a client-side regex/entity extractor with an optional Google Gemini AI API integration. The system automatically extracts product names, quantities, units, brands, categories, and price thresholds, handling varied natural phrasing across 6 languages. To enhance user utility, VoiceCart features a Smart Suggestions Engine providing low-stock alerts based on shopping history, seasonal product highlights, and dietary substitute recommendations. The minimalist responsive UI includes a dedicated Hands-Free Voice HUD, dark mode, live waveform visualizer, and LocalStorage persistence for an optimal voice-first shopping experience.
+VoiceCart AI is built as a zero-dependency, high-performance web application designed for fast, accessible, and intuitive voice-based shopping list management. It leverages the browser's native Web Speech API for real-time speech recognition and text-to-speech feedback, providing zero latency and no server overhead. Commands are parsed using a client-side regex and entity extractor. The system automatically extracts product names, quantities, units, brands, categories, and price thresholds. To enhance user utility, VoiceCart features a Smart Suggestions Engine providing low-stock alerts based on shopping history, seasonal product highlights, and dietary substitute recommendations. The minimalist responsive UI includes a dedicated Hands-Free Voice HUD, dark mode, live waveform visualizer, checkout demo, and LocalStorage persistence for an optimal voice-first shopping experience.
 
 ---
 
@@ -21,18 +21,17 @@ VoiceCart AI is built as a zero-dependency, high-performance web application des
 ### 1. Voice Input & Speech Synthesis
 - **Voice Command Recognition**: Real-time microphone listening via Web Speech API (`SpeechRecognition`).
 - **Text-to-Speech Feedback**: Speaks audio confirmations after executing actions (`speechSynthesis`).
-- **Multilingual Support**: Supports English, Spanish, French, German, Hindi, and Chinese voice commands.
+- **Multilingual Support**: Supports English and Hindi voice recognition.
 - **Audio Waveform & HUD**: Interactive mic visualizer and full-screen **Hands-Free Voice HUD Mode**.
 
 ### 2. Natural Language Processing (NLP)
 - Parses natural utterances without requiring strict command syntax:
-  - *"Add 2 bottles of organic milk for $4"*
+   - *"Add 2 bottles of organic milk for ₹4"*
   - *"Put 6 bananas on my list"*
   - *"Remove bread"*
-  - *"Find items under $5"*
+   - *"Find items under ₹5"*
   - *"What should I buy?"*
 - Auto-extracts: **Product Name**, **Quantity**, **Measurement Unit**, **Category**, **Price Limit**, and **Brand**.
-- **Gemini AI Integration**: Optional setting to supply a Gemini API key for advanced conversational intent parsing.
 
 ### 3. Smart Suggestions Engine
 - **Product Recommendations**: Low-stock alerts based on purchase history and frequency.
