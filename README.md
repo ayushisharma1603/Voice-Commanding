@@ -29,7 +29,7 @@
 ## 📝 Technical Approach Summary
 
 > [!NOTE]
-> **Strict Assessment Requirement Compliance (142 Words / 200 Words Max)**
+> **Strict Assessment Requirement Compliance**
 > 
 > VoiceCart AI is built as a zero-dependency, high-performance web application designed for fast, accessible, and intuitive voice-based shopping list management. It leverages the browser's native Web Speech API for real-time speech recognition and text-to-speech feedback, providing zero latency and no server overhead. Commands are parsed using a smart hybrid Natural Language Processing (NLP) pipeline combining a client-side regex/entity extractor with an optional Google Gemini AI API integration. The system automatically extracts product names, quantities, units, brands, categories, and price thresholds, handling varied natural phrasing across 6 languages. To enhance user utility, VoiceCart features a Smart Suggestions Engine providing low-stock alerts based on shopping history, seasonal product highlights, and dietary substitute recommendations. The minimalist responsive UI includes a dedicated Hands-Free Voice HUD, dark mode, live waveform visualizer, and LocalStorage persistence for an optimal voice-first shopping experience.
 
