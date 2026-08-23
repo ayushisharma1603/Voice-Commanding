@@ -15,6 +15,7 @@ export class VoiceManager {
         this.recognition = null;
         this.isListening = false;
         this.isSpeaking = false;
+        this.lastError = null;
         this.synth = window.speechSynthesis || null;
 
         this.initRecognition();
@@ -25,13 +26,10 @@ export class VoiceManager {
      */
     initRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                // Browser fallback notice per polish guide
-                if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-                    alert('Voice recognition is supported in Chrome.');
-                }
-                console.warn('SpeechRecognition API is not supported in this browser environment.');
-                return;
+        if (!SpeechRecognition) {
+            console.warn('SpeechRecognition API is not supported in this browser environment.');
+            this.notifyState('error', 'Voice input needs Chrome or Edge');
+            return;
         }
 
         this.recognition = new SpeechRecognition();
@@ -44,6 +42,7 @@ export class VoiceManager {
 
         this.recognition.onstart = () => {
             this.isListening = true;
+            this.lastError = null;
             this.notifyState('listening', 'Listening for command...');
         };
 
@@ -70,12 +69,28 @@ export class VoiceManager {
         this.recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             this.isListening = false;
-            this.notifyState('error', `Voice error: ${event.error}`);
+            this.lastError = event.error;
+            const messages = {
+                'network': 'Speech service unavailable. Check internet and try Chrome or Edge.',
+                'not-allowed': 'Microphone blocked. Allow microphone access in browser settings.',
+                'service-not-allowed': 'Speech service blocked. Allow microphone and speech access.',
+                'no-speech': 'No speech detected. Tap the mic and speak clearly.'
+            };
+            this.notifyState('error', messages[event.error] || `Voice error: ${event.error}`);
+
+            if (event.error === 'network' || event.error === 'service-not-allowed') {
+                const typedCommand = window.prompt('Voice service is unavailable. Type your shopping command instead:');
+                if (typedCommand && this.onResult) {
+                    this.onResult({ final: typedCommand.trim(), interim: '' });
+                }
+            }
         };
 
         this.recognition.onend = () => {
             this.isListening = false;
-            this.notifyState('idle', 'Tap mic or say command');
+            if (!this.lastError) {
+                this.notifyState('idle', 'Tap mic or say command');
+            }
         };
     }
 
@@ -93,7 +108,9 @@ export class VoiceManager {
      */
     startListening() {
         if (!this.recognition) {
-            alert('Voice input is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.');
+            const message = 'Voice input is unavailable here. Open this app in Google Chrome or Microsoft Edge and allow microphone access.';
+            this.notifyState('error', message);
+            alert(message);
             return;
         }
         if (this.isListening) {
@@ -110,6 +127,8 @@ export class VoiceManager {
             this.recognition.start();
         } catch (e) {
             console.error('Error starting speech recognition:', e);
+            this.isListening = false;
+            this.notifyState('error', 'Microphone is busy. Try again.');
         }
     }
 

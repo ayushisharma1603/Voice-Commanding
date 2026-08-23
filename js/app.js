@@ -96,7 +96,7 @@ class App {
         this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
         this.voiceFeedbackToggle = document.getElementById('voiceFeedbackToggle');
         this.soundFxToggle = document.getElementById('soundFxToggle');
-        this.geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+        this.geminiApiKeyInput = null;
         this.toastContainer = document.getElementById('toastContainer');
     }
 
@@ -205,7 +205,7 @@ class App {
             this.render();
 
             if (this.soundEnabled) SoundFX.playCheckPop();
-            const msg = `Checkout complete! Thank you for your purchase of ${count} items for $${total.toFixed(2)}.`;
+            const msg = `Checkout complete! Thank you for your purchase of ${count} items for ₹${total.toFixed(2)}.`;
             this.showToast('Order completed successfully!');
             this.voiceManager.speak(msg);
         });
@@ -311,7 +311,6 @@ class App {
             const settings = StorageManager.getSettings();
             this.voiceFeedbackToggle.checked = settings.voiceFeedback;
             this.soundFxToggle.checked = this.soundEnabled;
-            this.geminiApiKeyInput.value = settings.geminiApiKey || '';
             this.settingsModal.classList.remove('hidden');
         });
 
@@ -321,7 +320,6 @@ class App {
             const settings = StorageManager.getSettings();
             settings.voiceFeedback = this.voiceFeedbackToggle.checked;
             this.soundEnabled = this.soundFxToggle.checked;
-            settings.geminiApiKey = this.geminiApiKeyInput.value.trim();
             StorageManager.saveSettings(settings);
             this.settingsModal.classList.add('hidden');
             this.showToast('Settings saved');
@@ -365,7 +363,7 @@ class App {
         });
 
         this.checkoutItemsList.innerHTML = html;
-        this.checkoutTotalPayable.textContent = `$${total.toFixed(2)}`;
+        this.checkoutTotalPayable.textContent = `₹${total.toFixed(2)}`;
         this.refreshIcons();
     }
 
@@ -462,9 +460,9 @@ class App {
                     this.clearSearchBtn.classList.toggle('hidden', !this.searchQuery);
 
                     if (this.maxPriceFilter !== null) {
-                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under $${this.maxPriceFilter.toFixed(2)}`;
+                        this.activeFilterText.textContent = `Filter: "${this.searchQuery || 'Items'}" under ₹${this.maxPriceFilter.toFixed(2)}`;
                         this.activeFilterBanner.classList.remove('hidden');
-                        this.voiceManager.speak(`Filtered cart for items under ${this.maxPriceFilter} dollars.`);
+                        this.voiceManager.speak(`Filtered cart for items under ${this.maxPriceFilter} rupees.`);
                     } else {
                         this.voiceManager.speak(`Searching for ${this.searchQuery}`);
                     }
@@ -540,7 +538,7 @@ class App {
         let text = `🛒 VoiceCart AI - Shopping List (${new Date().toLocaleDateString()})\n\n`;
         this.items.forEach((item, idx) => {
             const check = item.completed ? '[x]' : '[ ]';
-            const priceStr = item.price ? ` ($${item.price.toFixed(2)})` : '';
+            const priceStr = item.price ? ` (₹${item.price.toFixed(2)})` : '';
             text += `${idx + 1}. ${check} ${item.name} - ${item.quantity} ${item.unit} [${item.category}]${priceStr}\n`;
         });
         navigator.clipboard.writeText(text);
@@ -694,11 +692,11 @@ class App {
         this.dashTotalItems.textContent = `${totalItemsCount} Items`;
         this.dashCompletedPercent.textContent = `${pctCompleted}%`;
         this.dashProgressBar.style.width = `${pctCompleted}%`;
-        this.dashEstTotal.textContent = `$${totalEstPrice.toFixed(2)}`;
+        this.dashEstTotal.textContent = `₹${totalEstPrice.toFixed(2)}`;
 
         this.summaryTotalCount.textContent = totalItemsCount;
         this.summaryPendingCount.textContent = pendingCount;
-        this.summaryTotalPrice.textContent = `$${totalEstPrice.toFixed(2)}`;
+        this.summaryTotalPrice.textContent = `₹${totalEstPrice.toFixed(2)}`;
 
         this.refreshIcons();
     }
@@ -717,7 +715,7 @@ class App {
                             <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium ${categoryBadgeClass}">${item.category}</span>
                         </div>
                         <div class="text-xs text-slate-400 mt-0.5">
-                            Price: <span class="font-semibold text-slate-600 dark:text-slate-300">${item.price ? `$${item.price.toFixed(2)}` : 'N/A'}</span>
+                            Price: <span class="font-semibold text-slate-600 dark:text-slate-300">${item.price ? `₹${item.price.toFixed(2)}` : 'N/A'}</span>
                         </div>
                     </div>
                 </div>
@@ -771,7 +769,7 @@ class App {
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-700 dark:text-emerald-300">🌿 In Season (${item.season})</span>
-                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">$${item.price.toFixed(2)}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900/60 text-[10px] text-emerald-900 dark:text-emerald-200 font-semibold">₹${item.price.toFixed(2)}</span>
                         </div>
                         <p class="font-semibold text-slate-800 dark:text-slate-100">${item.name}</p>
                         <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${item.reason}</p>
